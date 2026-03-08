@@ -109,5 +109,8 @@
     "npm": {
       "publish": true
     }
+  },
+  "dependencies": {
+    "@karmaniverous/jeeves-synth": "*"
   }
 }
