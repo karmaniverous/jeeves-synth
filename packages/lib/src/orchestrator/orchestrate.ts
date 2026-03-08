@@ -21,6 +21,7 @@ import {
   globMetas,
 } from '../discovery/index.js';
 import { getScopePrefix } from '../discovery/scope.js';
+import { toSynthError } from '../errors.js';
 import type { SynthExecutor, WatcherClient } from '../interfaces/index.js';
 import { acquireLock, releaseLock } from '../lock.js';
 import {
@@ -30,6 +31,11 @@ import {
 } from '../scheduling/index.js';
 import type { MetaJson, SynthConfig, SynthError } from '../schema/index.js';
 import { computeStructureHash } from '../structureHash.js';
+/** Normalize path separators to forward slashes. */
+function normalizePath(p: string): string {
+  return p.replaceAll('\\', '/');
+}
+
 import {
   buildArchitectTask,
   buildBuilderTask,
@@ -37,6 +43,7 @@ import {
 } from './buildTask.js';
 import { buildContextPackage } from './contextPackage.js';
 import { mergeAndWrite } from './merge.js';
+import type { BuilderOutput } from './parseOutput.js';
 import {
   parseArchitectOutput,
   parseBuilderOutput,
@@ -51,6 +58,37 @@ export interface OrchestrateResult {
   metaPath?: string;
   /** Error if synthesis failed. */
   error?: SynthError;
+}
+
+/** Finalize a cycle: merge, snapshot, prune. */
+function finalizeCycle(
+  metaPath: string,
+  current: MetaJson,
+  config: SynthConfig,
+  architect: string,
+  builder: string,
+  critic: string,
+  builderOutput: BuilderOutput | null,
+  feedback: string | null,
+  structureHash: string,
+  synthesisCount: number,
+  error: SynthError | null,
+): MetaJson {
+  const updated = mergeAndWrite({
+    metaPath,
+    current,
+    architect,
+    builder,
+    critic,
+    builderOutput,
+    feedback,
+    structureHash,
+    synthesisCount,
+    error,
+  });
+  createSnapshot(metaPath, updated);
+  pruneArchive(metaPath, config.maxArchive);
+  return updated;
 }
 
 /**
@@ -76,12 +114,12 @@ export async function orchestrate(
   // Ensure all meta.json files exist
   const metas = new Map<string, MetaJson>();
   for (const mp of metaPaths) {
-    metas.set(mp, ensureMetaJson(mp));
+    metas.set(normalizePath(mp), ensureMetaJson(mp));
   }
 
   const tree = buildOwnershipTree(metaPaths);
 
-  // Step 3-4: Staleness check + candidate selection
+  // Steps 3-4: Staleness check + candidate selection
   const candidates = [];
   for (const node of tree.nodes.values()) {
     const meta = metas.get(node.metaPath)!;
@@ -99,7 +137,7 @@ export async function orchestrate(
 
   // Step 2: Acquire lock
   if (!acquireLock(node.metaPath)) {
-    return { synthesized: false }; // Locked by another process
+    return { synthesized: false };
   }
 
   try {
@@ -107,6 +145,9 @@ export async function orchestrate(
     const currentMeta = JSON.parse(
       readFileSync(join(node.metaPath, 'meta.json'), 'utf8'),
     ) as MetaJson;
+
+    const architectPrompt = currentMeta._architect ?? config.defaultArchitect;
+    const criticPrompt = currentMeta._critic ?? config.defaultCritic;
 
     // Step 5: Structure hash
     const scopePrefix = getScopePrefix(node);
@@ -124,7 +165,7 @@ export async function orchestrate(
     // Step 7: Compute context
     const ctx = await buildContextPackage(node, currentMeta, watcher);
 
-    // Step 8: Architect
+    // Step 8: Architect (conditional)
     const architectTriggered =
       !currentMeta._builder ||
       structureChanged ||
@@ -144,27 +185,23 @@ export async function orchestrate(
         builderBrief = parseArchitectOutput(architectOutput);
         synthesisCount = 0;
       } catch (err) {
+        stepError = toSynthError('architect', err);
+
         if (!currentMeta._builder) {
-          // First run with no cached builder — cycle fails
-          stepError = {
-            step: 'architect',
-            code: 'FAILED',
-            message: err instanceof Error ? err.message : String(err),
-          };
-          mergeAndWrite({
-            metaPath: node.metaPath,
-            current: currentMeta,
-            architect: currentMeta._architect ?? config.defaultArchitect,
-            builder: '',
-            critic: currentMeta._critic ?? config.defaultCritic,
-            builderOutput: null,
-            feedback: null,
-            structureHash: newStructureHash,
+          // No cached builder — cycle fails
+          finalizeCycle(
+            node.metaPath,
+            currentMeta,
+            config,
+            architectPrompt,
+            '',
+            criticPrompt,
+            null,
+            null,
+            newStructureHash,
             synthesisCount,
-            error: stepError,
-          });
-          createSnapshot(node.metaPath, currentMeta);
-          pruneArchive(node.metaPath, config.maxArchive);
+            stepError,
+          );
           return {
             synthesized: true,
             metaPath: node.metaPath,
@@ -172,19 +209,12 @@ export async function orchestrate(
           };
         }
         // Has cached builder — continue with existing
-        stepError = {
-          step: 'architect',
-          code: 'FAILED',
-          message: err instanceof Error ? err.message : String(err),
-        };
       }
     }
 
-    // Update meta with new builder brief for the builder task
-    const metaForBuilder: MetaJson = { ...currentMeta, _builder: builderBrief };
-
     // Step 9: Builder
-    let builderOutput = null;
+    const metaForBuilder: MetaJson = { ...currentMeta, _builder: builderBrief };
+    let builderOutput: BuilderOutput | null = null;
     try {
       const builderTask = buildBuilderTask(ctx, metaForBuilder, config);
       const builderRaw = await executor.spawn(builderTask, {
@@ -193,12 +223,7 @@ export async function orchestrate(
       builderOutput = parseBuilderOutput(builderRaw);
       synthesisCount++;
     } catch (err) {
-      // Builder failed — don't update meta
-      stepError = {
-        step: 'builder',
-        code: 'FAILED',
-        message: err instanceof Error ? err.message : String(err),
-      };
+      stepError = toSynthError('builder', err);
       return { synthesized: true, metaPath: node.metaPath, error: stepError };
     }
 
@@ -216,31 +241,23 @@ export async function orchestrate(
       feedback = parseCriticOutput(criticRaw);
       stepError = null; // Clear any architect error on full success
     } catch (err) {
-      // Critic failed — write content without feedback
-      stepError = stepError ?? {
-        step: 'critic',
-        code: 'FAILED',
-        message: err instanceof Error ? err.message : String(err),
-      };
+      stepError = stepError ?? toSynthError('critic', err);
     }
 
-    // Step 11: Merge & write
-    const updatedMeta = mergeAndWrite({
-      metaPath: node.metaPath,
-      current: currentMeta,
-      architect: currentMeta._architect ?? config.defaultArchitect,
-      builder: builderBrief,
-      critic: currentMeta._critic ?? config.defaultCritic,
+    // Steps 11-12: Merge, archive, prune
+    finalizeCycle(
+      node.metaPath,
+      currentMeta,
+      config,
+      architectPrompt,
+      builderBrief,
+      criticPrompt,
       builderOutput,
       feedback,
-      structureHash: newStructureHash,
+      newStructureHash,
       synthesisCount,
-      error: stepError,
-    });
-
-    // Step 12: Archive
-    createSnapshot(node.metaPath, updatedMeta);
-    pruneArchive(node.metaPath, config.maxArchive);
+      stepError,
+    );
 
     return {
       synthesized: true,

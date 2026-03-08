@@ -7,12 +7,22 @@
  * @module orchestrator/contextPackage
  */
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { listArchiveFiles } from '../archive/index.js';
 import type { MetaNode } from '../discovery/index.js';
 import type { SynthContext, WatcherClient } from '../interfaces/index.js';
 import type { MetaJson } from '../schema/index.js';
+
+/** Filter files to exclude child meta subtrees. */
+function excludeChildSubtrees(
+  files: string[],
+  childPrefixes: string[],
+): string[] {
+  if (childPrefixes.length === 0) return files;
+  return files.filter((f) => childPrefixes.every((cp) => !f.startsWith(cp)));
+}
 
 /**
  * Build the context package for a synthesis cycle.
@@ -27,21 +37,15 @@ export async function buildContextPackage(
   meta: MetaJson,
   watcher: WatcherClient,
 ): Promise<SynthContext> {
-  // Scope files via watcher scan
+  const childPrefixes = node.children.map((c) => c.ownerPath + '/');
+
+  // Scope files via watcher scan, excluding child subtrees
   const scanResult = await watcher.scan({ pathPrefix: node.ownerPath });
   const allFiles = scanResult.files.map((f) => f.file_path);
-
-  // Filter out child meta subtrees (client-side exclusion)
-  const childPrefixes = node.children.map((c) => c.ownerPath + '/');
-  const scopeFiles = allFiles.filter((f) => {
-    for (const cp of childPrefixes) {
-      if (f.startsWith(cp)) return false;
-    }
-    return true;
-  });
+  const scopeFiles = excludeChildSubtrees(allFiles, childPrefixes);
 
   // Delta files: modified since _generatedAt
-  let deltaFiles: string[] = [];
+  let deltaFiles: string[];
   if (meta._generatedAt) {
     const modifiedAfter = Math.floor(
       new Date(meta._generatedAt).getTime() / 1000,
@@ -50,14 +54,10 @@ export async function buildContextPackage(
       pathPrefix: node.ownerPath,
       modifiedAfter,
     });
-    deltaFiles = deltaResult.files
-      .map((f) => f.file_path)
-      .filter((f) => {
-        for (const cp of childPrefixes) {
-          if (f.startsWith(cp)) return false;
-        }
-        return true;
-      });
+    deltaFiles = excludeChildSubtrees(
+      deltaResult.files.map((f) => f.file_path),
+      childPrefixes,
+    );
   } else {
     deltaFiles = scopeFiles; // First run: all files are delta
   }
@@ -76,16 +76,7 @@ export async function buildContextPackage(
   }
 
   // Archive paths
-  const archiveDir = join(node.metaPath, 'archive');
-  let archives: string[] = [];
-  try {
-    archives = readdirSync(archiveDir)
-      .filter((f) => f.endsWith('.json'))
-      .sort()
-      .map((f) => join(archiveDir, f));
-  } catch {
-    // No archive directory yet
-  }
+  const archives = listArchiveFiles(node.metaPath);
 
   return {
     path: node.metaPath,

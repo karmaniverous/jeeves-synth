@@ -4,10 +4,10 @@
  * @module archive/readLatest
  */
 
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 
 import type { MetaJson } from '../schema/index.js';
+import { listArchiveFiles } from './listArchive.js';
 
 /**
  * Read the most recent archive snapshot.
@@ -16,19 +16,9 @@ import type { MetaJson } from '../schema/index.js';
  * @returns The latest archived meta, or null if no archives exist.
  */
 export function readLatestArchive(metaPath: string): MetaJson | null {
-  const archiveDir = join(metaPath, 'archive');
-  let files: string[];
-  try {
-    files = readdirSync(archiveDir)
-      .filter((f) => f.endsWith('.json'))
-      .sort();
-  } catch {
-    return null;
-  }
-
+  const files = listArchiveFiles(metaPath);
   if (files.length === 0) return null;
 
-  const latest = join(archiveDir, files[files.length - 1]);
-  const raw = readFileSync(latest, 'utf8');
+  const raw = readFileSync(files[files.length - 1], 'utf8');
   return JSON.parse(raw) as MetaJson;
 }

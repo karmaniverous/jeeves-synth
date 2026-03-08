@@ -1,14 +1,55 @@
 /**
  * Build task prompts for each synthesis step.
  *
- * Serializes the relevant parts of SynthContext into each subprocess's
- * task prompt. Subprocesses handle step-specific work via tools.
- *
  * @module orchestrator/buildTask
  */
 
 import type { SynthContext } from '../interfaces/index.js';
 import type { MetaJson, SynthConfig } from '../schema/index.js';
+
+/** Append optional context sections shared across all step prompts. */
+function appendSharedSections(
+  sections: string[],
+  ctx: SynthContext,
+  options?: {
+    includeSteer?: boolean;
+    includePreviousContent?: boolean;
+    includePreviousFeedback?: boolean;
+    feedbackHeading?: string;
+    includeChildMetas?: boolean;
+  },
+): void {
+  const opts = {
+    includeSteer: true,
+    includePreviousContent: true,
+    includePreviousFeedback: true,
+    feedbackHeading: '## PREVIOUS FEEDBACK',
+    includeChildMetas: true,
+    ...options,
+  };
+
+  if (opts.includeSteer && ctx.steer) {
+    sections.push('', '## STEERING PROMPT', ctx.steer);
+  }
+
+  if (opts.includePreviousContent && ctx.previousContent) {
+    sections.push('', '## PREVIOUS SYNTHESIS', ctx.previousContent);
+  }
+
+  if (opts.includePreviousFeedback && ctx.previousFeedback) {
+    sections.push('', opts.feedbackHeading, ctx.previousFeedback);
+  }
+
+  if (opts.includeChildMetas && Object.keys(ctx.childMetas).length > 0) {
+    sections.push('', '## CHILD META OUTPUTS');
+    for (const [childPath, content] of Object.entries(ctx.childMetas)) {
+      sections.push(
+        `### ${childPath}`,
+        typeof content === 'string' ? content : '(not yet synthesized)',
+      );
+    }
+  }
+}
 
 /**
  * Build the architect task prompt.
@@ -23,10 +64,8 @@ export function buildArchitectTask(
   meta: MetaJson,
   config: SynthConfig,
 ): string {
-  const systemPrompt = meta._architect ?? config.defaultArchitect;
-
   const sections = [
-    systemPrompt,
+    meta._architect ?? config.defaultArchitect,
     '',
     '## SCOPE',
     `Path: ${ctx.path}`,
@@ -37,28 +76,7 @@ export function buildArchitectTask(
     ...ctx.scopeFiles.slice(0, config.maxLines).map((f) => `- ${f}`),
   ];
 
-  if (ctx.steer) {
-    sections.push('', '## STEERING PROMPT', ctx.steer);
-  }
-
-  if (ctx.previousContent) {
-    sections.push('', '## PREVIOUS SYNTHESIS', ctx.previousContent);
-  }
-
-  if (ctx.previousFeedback) {
-    sections.push('', '## PREVIOUS FEEDBACK', ctx.previousFeedback);
-  }
-
-  if (Object.keys(ctx.childMetas).length > 0) {
-    sections.push('', '## CHILD META OUTPUTS');
-    for (const [childPath, content] of Object.entries(ctx.childMetas)) {
-      sections.push(
-        `### ${childPath}`,
-        typeof content === 'string' ? content : '(not yet synthesized)',
-      );
-    }
-  }
-
+  appendSharedSections(sections, ctx);
   return sections.join('\n');
 }
 
@@ -75,11 +93,9 @@ export function buildBuilderTask(
   meta: MetaJson,
   config: SynthConfig,
 ): string {
-  const builder = meta._builder ?? '(No architect brief available)';
-
   const sections = [
     '## TASK BRIEF (from Architect)',
-    builder,
+    meta._builder ?? '(No architect brief available)',
     '',
     '## SCOPE',
     `Path: ${ctx.path}`,
@@ -87,23 +103,10 @@ export function buildBuilderTask(
     ...ctx.deltaFiles.slice(0, config.maxLines).map((f) => `- ${f}`),
   ];
 
-  if (ctx.previousContent) {
-    sections.push('', '## PREVIOUS SYNTHESIS', ctx.previousContent);
-  }
-
-  if (ctx.previousFeedback) {
-    sections.push('', '## FEEDBACK FROM CRITIC', ctx.previousFeedback);
-  }
-
-  if (Object.keys(ctx.childMetas).length > 0) {
-    sections.push('', '## CHILD META OUTPUTS');
-    for (const [childPath, content] of Object.entries(ctx.childMetas)) {
-      sections.push(
-        `### ${childPath}`,
-        typeof content === 'string' ? content : '(not yet synthesized)',
-      );
-    }
-  }
+  appendSharedSections(sections, ctx, {
+    includeSteer: false,
+    feedbackHeading: '## FEEDBACK FROM CRITIC',
+  });
 
   sections.push(
     '',
@@ -129,10 +132,8 @@ export function buildCriticTask(
   meta: MetaJson,
   config: SynthConfig,
 ): string {
-  const systemPrompt = meta._critic ?? config.defaultCritic;
-
   const sections = [
-    systemPrompt,
+    meta._critic ?? config.defaultCritic,
     '',
     '## SYNTHESIS TO EVALUATE',
     meta._content ?? '(No content produced)',
@@ -142,13 +143,11 @@ export function buildCriticTask(
     `Files in scope: ${ctx.scopeFiles.length.toString()}`,
   ];
 
-  if (ctx.steer) {
-    sections.push('', '## STEERING PROMPT', ctx.steer);
-  }
-
-  if (ctx.previousFeedback) {
-    sections.push('', '## YOUR PREVIOUS FEEDBACK', ctx.previousFeedback);
-  }
+  appendSharedSections(sections, ctx, {
+    includePreviousContent: false,
+    feedbackHeading: '## YOUR PREVIOUS FEEDBACK',
+    includeChildMetas: false,
+  });
 
   sections.push(
     '',

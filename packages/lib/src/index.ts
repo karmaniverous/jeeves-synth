@@ -6,6 +6,7 @@
 
 export {
   createSnapshot,
+  listArchiveFiles,
   pruneArchive,
   readLatestArchive,
 } from './archive/index.js';
@@ -19,6 +20,7 @@ export {
   type MetaNode,
   type OwnershipTree,
 } from './discovery/index.js';
+export { toSynthError } from './errors.js';
 export type {
   InferenceRuleSpec,
   ScanFile,

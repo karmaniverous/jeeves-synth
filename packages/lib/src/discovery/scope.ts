@@ -50,7 +50,7 @@ export function filterInScope(node: MetaNode, files: string[]): string[] {
   );
 
   return files.filter((f) => {
-    const normalized = f.replace(/\\\\/g, '/');
+    const normalized = f.split('\\').join('/');
 
     // Must be under ownerPath
     if (!normalized.startsWith(prefix) && normalized !== node.ownerPath)

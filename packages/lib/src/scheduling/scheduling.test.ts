@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { MetaNode } from '../discovery/index.js';
 import type { MetaJson } from '../schema/index.js';
@@ -139,5 +139,50 @@ describe('selectCandidate', () => {
     const winner = selectCandidate(candidates);
     expect(winner).not.toBeNull();
     expect(winner!.node.treeDepth).toBe(0); // very stale root beats fresh leaf
+  });
+});
+
+describe('isStale', () => {
+  // Dynamic import to avoid circular issues
+  it('returns true for never-synthesized meta', async () => {
+    const { isStale } = await import('./staleness.js');
+    const watcher = {
+      scan: vi.fn().mockResolvedValue({ files: [] }),
+      registerRules: vi.fn().mockResolvedValue(undefined),
+      unregisterRules: vi.fn().mockResolvedValue(undefined),
+    };
+    const meta = makeMeta();
+    const result = await isStale('/test', meta, watcher);
+    expect(result).toBe(true);
+    // Should not call scan since no _generatedAt
+    expect(watcher.scan).not.toHaveBeenCalled();
+  });
+
+  it('returns true when watcher reports modified files', async () => {
+    const { isStale } = await import('./staleness.js');
+    const watcher = {
+      scan: vi.fn().mockResolvedValue({
+        files: [
+          { file_path: '/test/a.md', modified_at: 999999, content_hash: 'x' },
+        ],
+      }),
+      registerRules: vi.fn().mockResolvedValue(undefined),
+      unregisterRules: vi.fn().mockResolvedValue(undefined),
+    };
+    const meta = makeMeta({ _generatedAt: '2026-01-01T00:00:00Z' });
+    const result = await isStale('/test', meta, watcher);
+    expect(result).toBe(true);
+  });
+
+  it('returns false when no files modified since _generatedAt', async () => {
+    const { isStale } = await import('./staleness.js');
+    const watcher = {
+      scan: vi.fn().mockResolvedValue({ files: [] }),
+      registerRules: vi.fn().mockResolvedValue(undefined),
+      unregisterRules: vi.fn().mockResolvedValue(undefined),
+    };
+    const meta = makeMeta({ _generatedAt: '2026-01-01T00:00:00Z' });
+    const result = await isStale('/test', meta, watcher);
+    expect(result).toBe(false);
   });
 });
