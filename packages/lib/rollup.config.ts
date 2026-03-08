@@ -20,7 +20,7 @@ const typescript = typescriptPlugin({
 
 const buildLibrary: RollupOptions = {
   input: 'src/index.ts',
-  external: ['zod', 'uuid', 'tslib'],
+  external: ['zod', 'tslib'],
   output: [{ dir: 'dist', extend: true, format: 'esm' }],
   plugins: [commonjsPlugin(), jsonPlugin(), nodeResolve(), typescript],
 };

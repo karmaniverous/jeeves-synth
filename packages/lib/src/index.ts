@@ -4,6 +4,16 @@
  * @packageDocumentation
  */
 
+export {
+  buildOwnershipTree,
+  ensureMetaJson,
+  filterInScope,
+  getScopeExclusions,
+  getScopePrefix,
+  globMetas,
+  type MetaNode,
+  type OwnershipTree,
+} from './discovery/index.js';
 export type {
   InferenceRuleSpec,
   ScanFile,
