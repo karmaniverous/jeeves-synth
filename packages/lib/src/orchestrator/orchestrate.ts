@@ -24,9 +24,11 @@ import { getScopePrefix } from '../discovery/scope.js';
 import { toSynthError } from '../errors.js';
 import type { SynthExecutor, WatcherClient } from '../interfaces/index.js';
 import { acquireLock, releaseLock } from '../lock.js';
+import { paginatedScan } from '../paginatedScan.js';
 import {
   actualStaleness,
   computeEffectiveStaleness,
+  isStale,
   selectCandidate,
 } from '../scheduling/index.js';
 import type { MetaJson, SynthConfig, SynthError } from '../schema/index.js';
@@ -141,6 +143,16 @@ export async function orchestrate(
   }
 
   try {
+    // Verify staleness with watcher (not just timestamp)
+    const verifiedStale = await isStale(
+      getScopePrefix(node),
+      winner.meta,
+      watcher,
+    );
+    if (!verifiedStale && winner.meta._generatedAt) {
+      return { synthesized: false };
+    }
+
     // Re-read meta after lock (may have changed)
     const currentMeta = JSON.parse(
       readFileSync(join(node.metaPath, 'meta.json'), 'utf8'),
@@ -151,8 +163,10 @@ export async function orchestrate(
 
     // Step 5: Structure hash
     const scopePrefix = getScopePrefix(node);
-    const scanResult = await watcher.scan({ pathPrefix: scopePrefix });
-    const scopeFiles = scanResult.files.map((f) => f.file_path);
+    const allScanFiles = await paginatedScan(watcher, {
+      pathPrefix: scopePrefix,
+    });
+    const scopeFiles = allScanFiles.map((f) => f.file_path);
     const newStructureHash = computeStructureHash(scopeFiles);
     const structureChanged = newStructureHash !== currentMeta._structureHash;
 

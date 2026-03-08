@@ -13,6 +13,7 @@ import { join } from 'node:path';
 import { listArchiveFiles } from '../archive/index.js';
 import type { MetaNode } from '../discovery/index.js';
 import type { SynthContext, WatcherClient } from '../interfaces/index.js';
+import { paginatedScan } from '../paginatedScan.js';
 import type { MetaJson } from '../schema/index.js';
 
 /** Filter files to exclude child meta subtrees. */
@@ -40,8 +41,10 @@ export async function buildContextPackage(
   const childPrefixes = node.children.map((c) => c.ownerPath + '/');
 
   // Scope files via watcher scan, excluding child subtrees
-  const scanResult = await watcher.scan({ pathPrefix: node.ownerPath });
-  const allFiles = scanResult.files.map((f) => f.file_path);
+  const allScanFiles = await paginatedScan(watcher, {
+    pathPrefix: node.ownerPath,
+  });
+  const allFiles = allScanFiles.map((f) => f.file_path);
   const scopeFiles = excludeChildSubtrees(allFiles, childPrefixes);
 
   // Delta files: modified since _generatedAt
@@ -50,12 +53,12 @@ export async function buildContextPackage(
     const modifiedAfter = Math.floor(
       new Date(meta._generatedAt).getTime() / 1000,
     );
-    const deltaResult = await watcher.scan({
+    const deltaScanFiles = await paginatedScan(watcher, {
       pathPrefix: node.ownerPath,
       modifiedAfter,
     });
     deltaFiles = excludeChildSubtrees(
-      deltaResult.files.map((f) => f.file_path),
+      deltaScanFiles.map((f) => f.file_path),
       childPrefixes,
     );
   } else {

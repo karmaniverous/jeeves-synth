@@ -20,6 +20,7 @@ export {
   type MetaNode,
   type OwnershipTree,
 } from './discovery/index.js';
+export { createSynthEngine, type SynthEngine } from './engine.js';
 export { toSynthError } from './errors.js';
 export type {
   InferenceRuleSpec,
@@ -46,6 +47,7 @@ export {
   parseBuilderOutput,
   parseCriticOutput,
 } from './orchestrator/index.js';
+export { paginatedScan } from './paginatedScan.js';
 export {
   actualStaleness,
   computeEffectiveStaleness,

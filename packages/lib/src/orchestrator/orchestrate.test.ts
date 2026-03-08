@@ -112,14 +112,15 @@ describe('orchestrate', () => {
     mkdirSync(join(testRoot, 'domain/.meta/archive'), { recursive: true });
 
     // Compute the structure hash for an empty file list
-    const emptyHash = createHash('sha256').update('').digest('hex');
+    // Hash must match the mock watcher's file list
+    const fileHash = createHash('sha256').update('test-file.md').digest('hex');
 
     const metaJson: MetaJson = {
       _id: '550e8400-e29b-41d4-a716-446655440000',
       _builder: 'Cached builder brief',
       _content: '# Old content',
       _generatedAt: new Date(Date.now() - 60000).toISOString(),
-      _structureHash: emptyHash,
+      _structureHash: fileHash,
       _synthesisCount: 1,
     };
     writeFileSync(
@@ -132,7 +133,8 @@ describe('orchestrate', () => {
       JSON.stringify(metaJson),
     );
 
-    const watcher = createMockWatcher([]);
+    // Need at least one file so isStale returns true
+    const watcher = createMockWatcher(['test-file.md']);
     const executor = createMockExecutor();
     const spawnSpy = vi.spyOn(executor, 'spawn');
 

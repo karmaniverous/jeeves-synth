@@ -77,6 +77,16 @@ export function buildArchitectTask(
   ];
 
   appendSharedSections(sections, ctx);
+
+  if (ctx.archives.length > 0) {
+    sections.push(
+      '',
+      '## ARCHIVE HISTORY',
+      `${ctx.archives.length.toString()} previous synthesis snapshots available in .meta/archive/.`,
+      'Review these to understand how the synthesis has evolved over time.',
+    );
+  }
+
   return sections.join('\n');
 }
 
