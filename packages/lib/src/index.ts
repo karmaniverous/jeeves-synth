@@ -62,3 +62,7 @@ export {
   synthErrorSchema,
 } from './schema/index.js';
 export { computeStructureHash } from './structureHash.js';
+export {
+  HttpWatcherClient,
+  type HttpWatcherClientOptions,
+} from './watcher-client/index.js';
