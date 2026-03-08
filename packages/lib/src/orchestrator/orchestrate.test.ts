@@ -27,6 +27,7 @@ const config: SynthConfig = {
   criticTimeout: 300,
   defaultArchitect: 'You are the architect.',
   defaultCritic: 'You are the critic.',
+  skipUnchanged: true,
 };
 
 function createMockWatcher(files: string[] = []): WatcherClient {

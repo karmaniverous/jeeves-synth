@@ -7,7 +7,7 @@
  * @module orchestrator/orchestrate
  */
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
@@ -29,7 +29,6 @@ import {
   actualStaleness,
   computeEffectiveStaleness,
   isStale,
-  selectCandidate,
 } from '../scheduling/index.js';
 import type { MetaJson, SynthConfig, SynthError } from '../schema/index.js';
 import { computeStructureHash } from '../structureHash.js';
@@ -132,27 +131,46 @@ export async function orchestrate(
   }
 
   const weighted = computeEffectiveStaleness(candidates, config.depthWeight);
-  const winner = selectCandidate(weighted);
-  if (!winner) return { synthesized: false };
 
-  const { node } = winner;
+  // Sort by effective staleness descending
+  const ranked = [...weighted].sort(
+    (a, b) => b.effectiveStaleness - a.effectiveStaleness,
+  );
+  if (ranked.length === 0) return { synthesized: false };
 
-  // Step 2: Acquire lock
-  if (!acquireLock(node.metaPath)) {
-    return { synthesized: false };
-  }
+  // Find the first candidate with actual changes (if skipUnchanged)
+  let winner: (typeof ranked)[0] | null = null;
+  for (const candidate of ranked) {
+    if (!acquireLock(candidate.node.metaPath)) continue;
 
-  try {
-    // Verify staleness with watcher (not just timestamp)
     const verifiedStale = await isStale(
-      getScopePrefix(node),
-      winner.meta,
+      getScopePrefix(candidate.node),
+      candidate.meta,
       watcher,
     );
-    if (!verifiedStale && winner.meta._generatedAt) {
+
+    if (!verifiedStale && candidate.meta._generatedAt) {
+      // Bump _generatedAt so it doesn't win next cycle
+      const metaFilePath = join(candidate.node.metaPath, 'meta.json');
+      const freshMeta = JSON.parse(
+        readFileSync(metaFilePath, 'utf8'),
+      ) as MetaJson;
+      freshMeta._generatedAt = new Date().toISOString();
+      writeFileSync(metaFilePath, JSON.stringify(freshMeta, null, 2));
+      releaseLock(candidate.node.metaPath);
+
+      if (config.skipUnchanged) continue;
       return { synthesized: false };
     }
 
+    winner = candidate;
+    break;
+  }
+
+  if (!winner) return { synthesized: false };
+  const { node } = winner;
+
+  try {
     // Re-read meta after lock (may have changed)
     const currentMeta = JSON.parse(
       readFileSync(join(node.metaPath, 'meta.json'), 'utf8'),

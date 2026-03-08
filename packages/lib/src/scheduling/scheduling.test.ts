@@ -102,6 +102,35 @@ describe('computeEffectiveStaleness', () => {
     expect(result[1].effectiveStaleness).toBe(14400); // (3+1)^1 * 3600
   });
 
+  it('applies _emphasis as multiplier on depthWeight', () => {
+    const candidates = [
+      {
+        node: makeNode(0),
+        meta: makeMeta({ _emphasis: 0.5 }),
+        actualStaleness: 3600,
+      },
+      {
+        node: makeNode(2),
+        meta: makeMeta({ _emphasis: 0.5 }),
+        actualStaleness: 3600,
+      },
+      {
+        node: makeNode(2),
+        meta: makeMeta(),
+        actualStaleness: 3600,
+      },
+    ];
+
+    const result = computeEffectiveStaleness(candidates, 1);
+
+    // depth 0 (norm 0), emph 0.5: 3600 * (0+1)^(1*0.5) = 3600 * 1 = 3600
+    expect(result[0].effectiveStaleness).toBe(3600);
+    // depth 2 (norm 2), emph 0.5: 3600 * (2+1)^(1*0.5) = 3600 * sqrt(3)
+    expect(result[1].effectiveStaleness).toBeCloseTo(3600 * Math.sqrt(3), 5);
+    // depth 2 (norm 2), emph 1: 3600 * (2+1)^(1*1) = 10800
+    expect(result[2].effectiveStaleness).toBe(10800);
+  });
+
   it('returns empty array for empty input', () => {
     expect(computeEffectiveStaleness([], 1)).toEqual([]);
   });

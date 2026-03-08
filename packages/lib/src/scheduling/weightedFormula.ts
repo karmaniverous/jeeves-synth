@@ -1,7 +1,7 @@
 /**
  * Weighted staleness formula for candidate selection.
  *
- * effectiveStaleness = actualStaleness * (normalizedDepth + 1) ^ depthWeight
+ * effectiveStaleness = actualStaleness * (normalizedDepth + 1) ^ (depthWeight * emphasis)
  *
  * @module scheduling/weightedFormula
  */
@@ -25,7 +25,10 @@ export interface StalenessCandidate {
  * Compute effective staleness for a set of candidates.
  *
  * Normalizes depths so the minimum becomes 0, then applies the formula:
- * effectiveStaleness = actualStaleness * (normalizedDepth + 1) ^ depthWeight
+ * effectiveStaleness = actualStaleness * (normalizedDepth + 1) ^ (depthWeight * emphasis)
+ *
+ * Per-meta _emphasis (default 1) multiplies depthWeight, allowing individual
+ * metas to tune how much their tree position affects scheduling.
  *
  * @param candidates - Array of { node, meta, actualStaleness }.
  * @param depthWeight - Exponent for depth weighting (0 = pure staleness).
@@ -48,9 +51,13 @@ export function computeEffectiveStaleness(
   const minDepth = Math.min(...depths);
   const normalizedDepths = depths.map((d) => Math.max(0, d - minDepth));
 
-  return candidates.map((c, i) => ({
-    ...c,
-    effectiveStaleness:
-      c.actualStaleness * Math.pow(normalizedDepths[i] + 1, depthWeight),
-  }));
+  return candidates.map((c, i) => {
+    const emphasis = c.meta._emphasis ?? 1;
+    return {
+      ...c,
+      effectiveStaleness:
+        c.actualStaleness *
+        Math.pow(normalizedDepths[i] + 1, depthWeight * emphasis),
+    };
+  });
 }

@@ -43,6 +43,13 @@ export const synthConfigSchema = z.object({
 
   /** Resolved critic system prompt text. */
   defaultCritic: z.string(),
+
+  /**
+   * When true, skip unchanged candidates and iterate to the next-stalest
+   * until finding one with actual changes. Skipped candidates get their
+   * _generatedAt bumped to prevent re-selection next cycle.
+   */
+  skipUnchanged: z.boolean().default(true),
 });
 
 /** Inferred type for jeeves-synth configuration. */

@@ -32,6 +32,7 @@ const sampleConfig: SynthConfig = {
   criticTimeout: 300,
   defaultArchitect: 'You are an architect. Analyze the data shape.',
   defaultCritic: 'You are a critic. Evaluate the synthesis.',
+  skipUnchanged: true,
 };
 
 const sampleMeta: MetaJson = {

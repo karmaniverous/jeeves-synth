@@ -69,6 +69,14 @@ export const metaJsonSchema = z
     _depth: z.number().optional(),
 
     /**
+     * Emphasis multiplier for depth weighting in scheduling.
+     * Default 1. Higher values increase this meta's scheduling priority
+     * relative to its depth. Set to 0.5 to halve the depth effect,
+     * 2 to double it, 0 to ignore depth entirely for this meta.
+     */
+    _emphasis: z.number().min(0).optional(),
+
+    /**
      * Structured error from last cycle. Present when a step failed.
      * Cleared on successful cycle.
      */
