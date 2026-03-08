@@ -1,0 +1,18 @@
+{
+  "id": "jeeves-synth-openclaw",
+  "name": "Jeeves Synth",
+  "description": "Knowledge synthesis tools — trigger synthesis, view status, manage entities.",
+  "version": "0.0.0",
+  "skills": [],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "watcherUrl": {
+        "type": "string",
+        "description": "jeeves-watcher API base URL",
+        "default": "http://127.0.0.1:1936"
+      }
+    }
+  }
+}
