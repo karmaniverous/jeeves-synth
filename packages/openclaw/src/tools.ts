@@ -116,7 +116,12 @@ export function registerSynthTools(api: PluginApi): void {
         let lastSynthPath: string | null = null;
         let lastSynthAt: string | null = null;
         let stalestPath: string | null = null;
-        let stalestEffective = 0;
+        const staleCandidates: Array<{
+          node: Parameters<typeof computeEffectiveStaleness>[0][0]['node'];
+          meta: Parameters<typeof computeEffectiveStaleness>[0][0]['meta'];
+          actualStaleness: number;
+          metaPath: string;
+        }> = [];
 
         for (const node of tree.nodes.values()) {
           if (pathPrefix && !node.metaPath.includes(pathPrefix)) continue;
@@ -166,15 +171,14 @@ export function registerSynthTools(api: PluginApi): void {
             lastSynthPath = node.metaPath;
           }
 
-          // Compute effective staleness for stalest candidate
-          const depth = meta._depth ?? node.treeDepth;
-          const emphasis = meta._emphasis ?? 1;
-          const effective =
-            staleness * Math.pow(depth + 1, getConfig().depthWeight * emphasis);
-          if (effective > stalestEffective) {
-            stalestEffective = effective;
-            stalestPath = node.metaPath;
-          }
+          // Collect for batch staleness computation
+          staleCandidates.push({
+            node,
+            meta,
+            actualStaleness:
+              staleness === Infinity ? Number.MAX_SAFE_INTEGER : staleness,
+            metaPath: node.metaPath,
+          });
 
           const fields = params.fields as string[] | undefined;
           const raw: SynthEntity = {
@@ -204,6 +208,18 @@ export function registerSynthTools(api: PluginApi): void {
           } else {
             entities.push(raw);
           }
+        }
+
+        // Compute effective staleness using shared formula
+        if (staleCandidates.length > 0) {
+          const weighted = computeEffectiveStaleness(
+            staleCandidates,
+            getConfig().depthWeight,
+          );
+          const stalest = weighted.reduce((a, b) =>
+            b.effectiveStaleness > a.effectiveStaleness ? b : a,
+          );
+          stalestPath = staleCandidates[weighted.indexOf(stalest)].metaPath;
         }
 
         return ok({
