@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * jeeves-meta CLI — ad hoc invocation, debugging, and maintenance.
  *
