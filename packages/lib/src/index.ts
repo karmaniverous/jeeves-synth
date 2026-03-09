@@ -64,8 +64,6 @@ export {
   synthConfigSchema,
   type SynthError,
   synthErrorSchema,
-  type SynthStep,
-  synthSteps,
 } from './schema/index.js';
 export { computeStructureHash } from './structureHash.js';
 export {

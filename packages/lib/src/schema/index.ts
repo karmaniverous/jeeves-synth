@@ -5,5 +5,5 @@
  */
 
 export { type SynthConfig, synthConfigSchema } from './config.js';
-export { type SynthError, synthErrorSchema, type SynthStep, synthSteps } from './error.js';
+export { type SynthError, synthErrorSchema } from './error.js';
 export { type MetaJson, metaJsonSchema } from './meta.js';
