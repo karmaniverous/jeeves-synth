@@ -149,7 +149,30 @@ const SYNTH_RULES = [
         },
       },
     ],
-    template: 'synth-config.hbs',
+    render: {
+      frontmatter: [
+        'watchPaths',
+        'watcherUrl',
+        'gatewayUrl',
+        'architectEvery',
+        'depthWeight',
+        'maxArchive',
+        'maxLines',
+        'batchSize',
+      ],
+      body: [
+        {
+          path: 'json.defaultArchitect',
+          heading: 2,
+          label: 'Default Architect Prompt',
+        },
+        {
+          path: 'json.defaultCritic',
+          heading: 2,
+          label: 'Default Critic Prompt',
+        },
+      ],
+    },
     renderAs: 'md',
   },
 ];
