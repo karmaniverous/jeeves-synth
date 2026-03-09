@@ -31,7 +31,7 @@ export interface ToolResult {
   isError?: boolean;
 }
 
-const PLUGIN_NAME = 'jeeves-synth-openclaw';
+const PLUGIN_NAME = 'jeeves-meta-openclaw';
 
 /** Get plugin config. */
 function getPluginConfig(api: PluginApi): Record<string, unknown> | undefined {
@@ -52,11 +52,11 @@ export function getWatchPaths(api: PluginApi): string[] {
 
 /**
  * Get the config file path from plugin settings.
- * Default: J:/config/jeeves-synth.config.json
+ * Default: J:/config/jeeves-meta.config.json
  */
 export function getConfigPath(api: PluginApi): string {
   const p = getPluginConfig(api)?.configPath;
-  return typeof p === 'string' ? p : 'J:/config/jeeves-synth.config.json';
+  return typeof p === 'string' ? p : 'J:/config/jeeves-meta.config.json';
 }
 
 /** Format a successful tool result. */

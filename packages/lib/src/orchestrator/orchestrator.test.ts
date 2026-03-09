@@ -18,7 +18,7 @@ import {
   parseCriticOutput,
 } from './parseOutput.js';
 
-const testRoot = join(tmpdir(), `jeeves-synth-orch-${Date.now().toString()}`);
+const testRoot = join(tmpdir(), `jeeves-meta-orch-${Date.now().toString()}`);
 
 const sampleConfig: SynthConfig = {
   watchPaths: ['/test'],

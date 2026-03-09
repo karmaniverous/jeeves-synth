@@ -21,9 +21,9 @@
     "powershell",
     "handlebars"
   ],
-  "hostedBaseUrl": "https://docs.karmanivero.us/jeeves-synth",
+  "hostedBaseUrl": "https://docs.karmanivero.us/jeeves-meta",
   "navigationLinks": {
-    "GitHub": "https://github.com/karmaniverous/jeeves-synth"
+    "GitHub": "https://github.com/karmaniverous/jeeves-meta"
   },
   "out": "./docs/",
   "plugin": [

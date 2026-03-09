@@ -120,7 +120,7 @@ describe('HttpWatcherClient.registerRules', () => {
   it('sends POST /rules/register', async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ ok: true }));
 
-    await client.registerRules('jeeves-synth', [
+    await client.registerRules('jeeves-meta', [
       {
         name: 'test-rule',
         description: 'A test rule',
@@ -132,7 +132,7 @@ describe('HttpWatcherClient.registerRules', () => {
     const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('http://localhost:1936/rules/register');
     const body = JSON.parse(init.body as string) as Record<string, unknown>;
-    expect(body.source).toBe('jeeves-synth');
+    expect(body.source).toBe('jeeves-meta');
   });
 });
 
@@ -140,11 +140,11 @@ describe('HttpWatcherClient.unregisterRules', () => {
   it('sends POST /rules/unregister', async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ ok: true }));
 
-    await client.unregisterRules('jeeves-synth');
+    await client.unregisterRules('jeeves-meta');
 
     const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('http://localhost:1936/rules/unregister');
     const body = JSON.parse(init.body as string) as Record<string, unknown>;
-    expect(body.source).toBe('jeeves-synth');
+    expect(body.source).toBe('jeeves-meta');
   });
 });

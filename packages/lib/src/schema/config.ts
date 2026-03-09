@@ -1,5 +1,5 @@
 /**
- * Zod schema for jeeves-synth configuration.
+ * Zod schema for jeeves-meta configuration.
  *
  * Consumers load config however they want (file, env, constructor).
  * The library validates via this schema.
@@ -9,7 +9,7 @@
 
 import { z } from 'zod';
 
-/** Zod schema for jeeves-synth configuration. */
+/** Zod schema for jeeves-meta configuration. */
 export const synthConfigSchema = z.object({
   /** Filesystem paths to watch for .meta/ directories. */
   watchPaths: z.array(z.string()).min(1),
@@ -55,5 +55,5 @@ export const synthConfigSchema = z.object({
   batchSize: z.number().int().min(1).default(1),
 });
 
-/** Inferred type for jeeves-synth configuration. */
+/** Inferred type for jeeves-meta configuration. */
 export type SynthConfig = z.infer<typeof synthConfigSchema>;

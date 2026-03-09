@@ -12,7 +12,7 @@ import { orchestrate } from './orchestrate.js';
 
 const testRoot = join(
   tmpdir(),
-  `jeeves-synth-orch-int-${Date.now().toString()}`,
+  `jeeves-meta-orch-int-${Date.now().toString()}`,
 );
 
 const config: SynthConfig = {

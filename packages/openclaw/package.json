@@ -1,14 +1,14 @@
 {
-  "name": "@karmaniverous/jeeves-synth-openclaw",
+  "name": "@karmaniverous/jeeves-meta-openclaw",
   "version": "0.0.0",
   "author": "Jason Williscroft",
-  "description": "OpenClaw plugin for jeeves-synth — synthesis tools and virtual rule registration",
+  "description": "OpenClaw plugin for jeeves-meta — synthesis tools and virtual rule registration",
   "license": "BSD-3-Clause",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "jeeves-synth-openclaw": "./dist/cli.js"
+    "jeeves-meta-openclaw": "./dist/cli.js"
   },
   "exports": {
     ".": {
@@ -27,17 +27,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/karmaniverous/jeeves-synth.git",
+    "url": "git+https://github.com/karmaniverous/jeeves-meta.git",
     "directory": "packages/openclaw"
   },
   "bugs": {
-    "url": "https://github.com/karmaniverous/jeeves-synth/issues"
+    "url": "https://github.com/karmaniverous/jeeves-meta/issues"
   },
-  "homepage": "https://github.com/karmaniverous/jeeves-synth#readme",
+  "homepage": "https://github.com/karmaniverous/jeeves-meta#readme",
   "keywords": [
     "openclaw",
     "plugin",
-    "jeeves-synth",
+    "jeeves-meta",
     "synthesis"
   ],
   "engines": {
@@ -80,7 +80,7 @@
   "release-it": {
     "git": {
       "changelog": "npx auto-changelog --unreleased-only --stdout --template https://raw.githubusercontent.com/release-it/release-it/main/templates/changelog-compact.hbs",
-      "commitMessage": "chore: release @karmaniverous/jeeves-synth-openclaw v${version}",
+      "commitMessage": "chore: release @karmaniverous/jeeves-meta-openclaw v${version}",
       "tagName": "openclaw/${version}",
       "requireBranch": "main"
     },
@@ -112,6 +112,6 @@
     }
   },
   "dependencies": {
-    "@karmaniverous/jeeves-synth": "*"
+    "@karmaniverous/jeeves-meta": "*"
   }
 }

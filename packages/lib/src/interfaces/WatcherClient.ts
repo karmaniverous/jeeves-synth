@@ -75,7 +75,7 @@ export interface WatcherClient {
   /**
    * Register virtual inference rules with the watcher.
    *
-   * @param source - Source identifier (e.g. 'jeeves-synth').
+   * @param source - Source identifier (e.g. 'jeeves-meta').
    * @param rules - Array of inference rules to register.
    */
   registerRules(source: string, rules: InferenceRuleSpec[]): Promise<void>;

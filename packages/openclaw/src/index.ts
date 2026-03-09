@@ -1,5 +1,5 @@
 /**
- * OpenClaw plugin for jeeves-synth.
+ * OpenClaw plugin for jeeves-meta.
  *
  * Registers synthesis tools and virtual inference rules at gateway startup.
  *
@@ -11,7 +11,7 @@ import { getWatcherUrl } from './helpers.js';
 import { registerSynthRules } from './rules.js';
 import { registerSynthTools } from './tools.js';
 
-/** Register all jeeves-synth tools and rules with the OpenClaw plugin API. */
+/** Register all jeeves-meta tools and rules with the OpenClaw plugin API. */
 export default function register(api: PluginApi): void {
   registerSynthTools(api);
 
@@ -19,6 +19,6 @@ export default function register(api: PluginApi): void {
   const watcherUrl = getWatcherUrl(api);
   registerSynthRules(watcherUrl).catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
-    console.error('[jeeves-synth] Failed to register virtual rules:', message);
+    console.error('[jeeves-meta] Failed to register virtual rules:', message);
   });
 }

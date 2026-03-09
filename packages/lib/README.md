@@ -1,4 +1,4 @@
-# @karmaniverous/jeeves-synth
+# @karmaniverous/jeeves-meta
 
 Core synthesis engine for the Jeeves platform. Provides schemas, filesystem discovery, weighted staleness scheduling, and the three-step orchestrator (architect → builder → critic).
 
@@ -22,13 +22,13 @@ Core synthesis engine for the Jeeves platform. Provides schemas, filesystem disc
 ## Install
 
 ```bash
-npm install @karmaniverous/jeeves-synth
+npm install @karmaniverous/jeeves-meta
 ```
 
 ## Quick Start
 
 ```typescript
-import { createSynthEngine, HttpWatcherClient } from '@karmaniverous/jeeves-synth';
+import { createSynthEngine, HttpWatcherClient } from '@karmaniverous/jeeves-meta';
 
 const watcher = new HttpWatcherClient('http://localhost:1936');
 
@@ -50,7 +50,7 @@ const results = await engine.orchestrate();
 
 Full docs, guides, and API reference:
 
-**[docs.karmanivero.us/jeeves-synth](https://docs.karmanivero.us/jeeves-synth)**
+**[docs.karmanivero.us/jeeves-meta](https://docs.karmanivero.us/jeeves-meta)**
 
 ## License
 

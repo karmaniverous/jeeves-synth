@@ -10,7 +10,7 @@ import { globMetas } from './globMetas.js';
 import { buildOwnershipTree } from './ownershipTree.js';
 import { filterInScope, getScopeExclusions, getScopePrefix } from './scope.js';
 
-const testRoot = join(tmpdir(), `jeeves-synth-test-${Date.now().toString()}`);
+const testRoot = join(tmpdir(), `jeeves-meta-test-${Date.now().toString()}`);
 
 function mkdirs(...paths: string[]): void {
   for (const p of paths) {

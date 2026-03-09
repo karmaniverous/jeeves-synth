@@ -18,10 +18,7 @@ import { pruneArchive } from './prune.js';
 import { readLatestArchive } from './readLatest.js';
 import { createSnapshot } from './snapshot.js';
 
-const testRoot = join(
-  tmpdir(),
-  `jeeves-synth-archive-${Date.now().toString()}`,
-);
+const testRoot = join(tmpdir(), `jeeves-meta-archive-${Date.now().toString()}`);
 
 const sampleMeta: MetaJson = {
   _id: '550e8400-e29b-41d4-a716-446655440000',

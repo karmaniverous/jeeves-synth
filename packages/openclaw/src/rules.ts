@@ -1,5 +1,5 @@
 /**
- * Virtual rule definitions and registration for jeeves-synth.
+ * Virtual rule definitions and registration for jeeves-meta.
  *
  * Registers three inference rules with the watcher at plugin startup:
  * 1. synth-meta-live — indexes live .meta/meta.json files
@@ -9,15 +9,15 @@
  * @module rules
  */
 
-import { HttpWatcherClient } from '@karmaniverous/jeeves-synth';
+import { HttpWatcherClient } from '@karmaniverous/jeeves-meta';
 
-const SOURCE = 'jeeves-synth';
+const SOURCE = 'jeeves-meta';
 
 /** Virtual rule definitions per spec Section 15. */
 const SYNTH_RULES = [
   {
     name: 'synth-meta-live',
-    description: 'Live jeeves-synth .meta/meta.json files',
+    description: 'Live jeeves-meta .meta/meta.json files',
     match: {
       properties: {
         file: {
@@ -96,7 +96,7 @@ const SYNTH_RULES = [
   },
   {
     name: 'synth-meta-archive',
-    description: 'Archived jeeves-synth .meta/archive snapshots',
+    description: 'Archived jeeves-meta .meta/archive snapshots',
     match: {
       properties: {
         file: {
@@ -131,12 +131,12 @@ const SYNTH_RULES = [
   },
   {
     name: 'synth-config',
-    description: 'jeeves-synth configuration file',
+    description: 'jeeves-meta configuration file',
     match: {
       properties: {
         file: {
           properties: {
-            path: { type: 'string', glob: '**/jeeves-synth.config.json' },
+            path: { type: 'string', glob: '**/jeeves-meta.config.json' },
           },
         },
       },
@@ -155,7 +155,7 @@ const SYNTH_RULES = [
 ];
 
 /**
- * Register jeeves-synth virtual rules with the watcher.
+ * Register jeeves-meta virtual rules with the watcher.
  *
  * Called at plugin startup. Rules are additive — the watcher appends
  * them after config-file rules (last-match-wins).

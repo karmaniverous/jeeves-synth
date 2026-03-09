@@ -9,21 +9,21 @@ title: Plugin Setup
 Install the plugin package:
 
 ```bash
-npm install @karmaniverous/jeeves-synth-openclaw
+npm install @karmaniverous/jeeves-meta-openclaw
 ```
 
 Register it with the OpenClaw gateway configuration.
 
 ## Configuration
 
-The plugin reads `J:\config\jeeves-synth.config.json` via `loadSynthConfig()`:
+The plugin reads `J:\config\jeeves-meta.config.json` via `loadSynthConfig()`:
 
 ```json
 {
   "watchPaths": ["j:/domains"],
   "watcherUrl": "http://localhost:1936",
-  "defaultArchitect": "@file:jeeves-synth/prompts/architect.md",
-  "defaultCritic": "@file:jeeves-synth/prompts/critic.md",
+  "defaultArchitect": "@file:jeeves-meta/prompts/architect.md",
+  "defaultCritic": "@file:jeeves-meta/prompts/critic.md",
   "depthWeight": 0.5,
   "skipUnchanged": true,
   "batchSize": 1

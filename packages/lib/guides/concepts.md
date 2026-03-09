@@ -8,7 +8,7 @@ title: Core Concepts
 
 ![Ownership Tree](../assets/ownership-tree.png)
 
-jeeves-synth discovers `.meta/` directories across watched filesystem paths and builds an **ownership tree**. Each `.meta/` directory "owns" the files in its parent directory, excluding any subdirectories that have their own `.meta/`.
+jeeves-meta discovers `.meta/` directories across watched filesystem paths and builds an **ownership tree**. Each `.meta/` directory "owns" the files in its parent directory, excluding any subdirectories that have their own `.meta/`.
 
 ```
 domains/

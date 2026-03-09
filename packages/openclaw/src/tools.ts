@@ -18,7 +18,7 @@ import {
   readLatestArchive,
   selectCandidate,
   type SynthConfig,
-} from '@karmaniverous/jeeves-synth';
+} from '@karmaniverous/jeeves-meta';
 
 import { loadSynthConfig } from './configLoader.js';
 import {
@@ -316,7 +316,7 @@ export function registerSynthTools(api: PluginApi): void {
           const { readFileSync } = await import('node:fs');
           const { join } = await import('node:path');
           const { listArchiveFiles } =
-            await import('@karmaniverous/jeeves-synth');
+            await import('@karmaniverous/jeeves-meta');
 
           const archiveFiles = listArchiveFiles(targetNode.metaPath);
           const limit =
@@ -503,7 +503,7 @@ export function registerSynthTools(api: PluginApi): void {
       params: Record<string, unknown>,
     ): Promise<ToolResult> => {
       try {
-        const { orchestrate } = await import('@karmaniverous/jeeves-synth');
+        const { orchestrate } = await import('@karmaniverous/jeeves-meta');
         const { GatewayExecutor } = await import('./executor.js');
 
         // Load config from canonical config file

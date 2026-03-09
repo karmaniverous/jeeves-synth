@@ -1,8 +1,8 @@
-# jeeves-synth — OpenClaw Skill
+# jeeves-meta — OpenClaw Skill
 
 ## Overview
 
-jeeves-synth is the Jeeves platform's knowledge synthesis engine. It discovers
+jeeves-meta is the Jeeves platform's knowledge synthesis engine. It discovers
 `.meta/` directories, gathers context from the Qdrant vector index, and uses
 a three-step LLM process (architect, builder, critic) to produce structured
 synthesis artifacts.

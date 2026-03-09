@@ -27,7 +27,7 @@ Indexes `.meta/archive/*.json` snapshots:
 
 ## Rule 3: synth-config
 
-Indexes `jeeves-synth.config.json`:
+Indexes `jeeves-meta.config.json`:
 
 - Domain: `synth-config`
 - Rendered via `synth-config.hbs` template

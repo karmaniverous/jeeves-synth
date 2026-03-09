@@ -12,7 +12,7 @@ import type {
   SynthExecutor,
   SynthSpawnOptions,
   SynthSpawnResult,
-} from '@karmaniverous/jeeves-synth';
+} from '@karmaniverous/jeeves-meta';
 
 const DEFAULT_POLL_INTERVAL_MS = 5000;
 const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes

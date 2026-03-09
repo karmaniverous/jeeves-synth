@@ -1,5 +1,5 @@
 {
-  "name": "jeeves-synth-monorepo",
+  "name": "jeeves-meta-monorepo",
   "private": true,
   "workspaces": [
     "packages/*"

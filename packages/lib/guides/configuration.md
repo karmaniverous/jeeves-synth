@@ -29,8 +29,8 @@ Prompts are stored as Markdown files and referenced via `@file:` indirection in 
 
 ```json
 {
-  "defaultArchitect": "@file:jeeves-synth/prompts/architect.md",
-  "defaultCritic": "@file:jeeves-synth/prompts/critic.md"
+  "defaultArchitect": "@file:jeeves-meta/prompts/architect.md",
+  "defaultCritic": "@file:jeeves-meta/prompts/critic.md"
 }
 ```
 

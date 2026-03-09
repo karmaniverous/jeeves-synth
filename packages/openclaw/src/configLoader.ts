@@ -1,5 +1,5 @@
 /**
- * Load and resolve jeeves-synth config with \@file: indirection.
+ * Load and resolve jeeves-meta config with \@file: indirection.
  *
  * @module configLoader
  */
@@ -10,7 +10,7 @@ import { dirname, join } from 'node:path';
 import {
   type SynthConfig,
   synthConfigSchema,
-} from '@karmaniverous/jeeves-synth';
+} from '@karmaniverous/jeeves-meta';
 
 /**
  * Resolve \@file: references in a config value.
@@ -28,7 +28,7 @@ function resolveFileRef(value: string, baseDir: string): string {
 /**
  * Load synth config from a JSON file, resolving \@file: references.
  *
- * @param configPath - Path to jeeves-synth.config.json.
+ * @param configPath - Path to jeeves-meta.config.json.
  * @returns Validated SynthConfig with resolved prompt strings.
  */
 export function loadSynthConfig(configPath: string): SynthConfig {
