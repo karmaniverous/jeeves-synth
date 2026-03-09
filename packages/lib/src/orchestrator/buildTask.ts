@@ -77,6 +77,11 @@ export function buildArchitectTask(
     condenseScopeFiles(ctx.scopeFiles),
   ];
 
+  // Inject previous _builder so architect can see its own prior output
+  if (meta._builder) {
+    sections.push('', '## PREVIOUS TASK BRIEF', meta._builder);
+  }
+
   appendSharedSections(sections, ctx);
 
   if (ctx.archives.length > 0) {

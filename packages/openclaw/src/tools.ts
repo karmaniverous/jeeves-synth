@@ -58,6 +58,17 @@ export function registerSynthTools(api: PluginApi): void {
           type: 'string',
           description: 'Filter metas by path prefix (e.g. "github/").',
         },
+        filter: {
+          type: 'object',
+          description:
+            'Structured filter. Supported keys: hasError (boolean), staleHours (number, min hours stale), neverSynthesized (boolean), locked (boolean).',
+          properties: {
+            hasError: { type: 'boolean' },
+            staleHours: { type: 'number' },
+            neverSynthesized: { type: 'boolean' },
+            locked: { type: 'boolean' },
+          },
+        },
         fields: {
           type: 'array',
           items: { type: 'string' },
@@ -93,6 +104,20 @@ export function registerSynthTools(api: PluginApi): void {
           if (pathPrefix && !node.metaPath.includes(pathPrefix)) continue;
 
           const meta = ensureMetaJson(node.metaPath);
+
+          // Apply structured filter
+          const filter = params.filter as Record<string, unknown> | undefined;
+          if (filter) {
+            const staleness = actualStaleness(meta);
+            const hasErr = Boolean(meta._error);
+            const locked = isLocked(node.metaPath.replaceAll('/', '\\'));
+            const neverSynth = !meta._generatedAt;
+
+            if (filter.hasError !== undefined && hasErr !== filter.hasError) continue;
+            if (filter.neverSynthesized !== undefined && neverSynth !== filter.neverSynthesized) continue;
+            if (filter.locked !== undefined && locked !== filter.locked) continue;
+            if (typeof filter.staleHours === 'number' && staleness < filter.staleHours * 3600) continue;
+          }
           const staleness = actualStaleness(meta);
           const locked = isLocked(node.metaPath.replaceAll('/', '\\'));
           const hasError = Boolean(meta._error);
@@ -123,7 +148,8 @@ export function registerSynthTools(api: PluginApi): void {
             stalestPath = node.metaPath;
           }
 
-          entities.push({
+          const fields = params.fields as string[] | undefined;
+          const raw: Record<string, unknown> = {
             path: node.metaPath,
             depth: meta._depth ?? node.treeDepth,
             emphasis: meta._emphasis ?? 1,
@@ -138,7 +164,17 @@ export function registerSynthTools(api: PluginApi): void {
             builderTokens: meta._builderTokens ?? null,
             criticTokens: meta._criticTokens ?? null,
             children: node.children.length,
-          });
+          };
+          // Apply field projection if specified
+          if (fields) {
+            const projected: Record<string, unknown> = {};
+            for (const f of fields) {
+              if (f in raw) projected[f] = raw[f];
+            }
+            entities.push(projected);
+          } else {
+            entities.push(raw);
+          }
         }
 
         return ok({
@@ -157,7 +193,7 @@ export function registerSynthTools(api: PluginApi): void {
             lastSynthesizedPath: lastSynthPath,
             lastSynthesizedAt: lastSynthAt,
           },
-          items: entities.sort((a, b) => a.path.localeCompare(b.path)),
+          items: entities.sort((a, b) => String(a.path ?? '').localeCompare(String(b.path ?? ''))),
         });
       } catch (error) {
         return fail(error);
