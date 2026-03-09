@@ -90,9 +90,13 @@ export class HttpWatcherClient implements WatcherClient {
   }
 
   async scan(params: ScanParams): Promise<ScanResponse> {
-    const body: Record<string, unknown> = {
-      pathPrefix: params.pathPrefix,
-    };
+    const body: Record<string, unknown> = {};
+    if (params.pathPrefix !== undefined) {
+      body.pathPrefix = params.pathPrefix;
+    }
+    if (params.filter !== undefined) {
+      body.filter = params.filter;
+    }
     if (params.modifiedAfter !== undefined) {
       body.modifiedAfter = params.modifiedAfter;
     }

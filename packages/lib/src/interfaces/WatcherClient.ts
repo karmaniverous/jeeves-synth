@@ -22,8 +22,10 @@ export interface ScanFile {
 
 /** Parameters for a scan request. */
 export interface ScanParams {
-  /** Required file path prefix to match. */
-  pathPrefix: string;
+  /** File path prefix to match. Required unless filter is provided. */
+  pathPrefix?: string;
+  /** Qdrant filter object for structural queries. */
+  filter?: Record<string, unknown>;
   /** Filter files modified after this Unix timestamp (seconds). */
   modifiedAfter?: number;
   /** Which payload fields to return (default: all). */

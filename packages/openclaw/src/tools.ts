@@ -66,7 +66,6 @@ export function registerSynthTools(api: PluginApi): void {
 
   // ─── synth_list ──────────────────────────────────────────────
   api.registerTool({
-    // TODO: migrate from filesystem glob to watcher_scan for dashboard performance
     name: 'synth_list',
     description:
       'List metas with summary stats and per-meta projection. Replaces synth_status + synth_entities.',
@@ -102,9 +101,26 @@ export function registerSynthTools(api: PluginApi): void {
     ): Promise<ToolResult> => {
       try {
         const pathPrefix = params.pathPrefix as string | undefined;
-        await Promise.resolve();
-        const metaPaths = globMetas(getWatchPaths());
-        const tree = buildOwnershipTree(metaPaths);
+        const watcher = new HttpWatcherClient({ baseUrl: getWatcherUrl() });
+
+        // Query watcher for synth-meta domain points
+        const scanFiles = await paginatedScan(watcher, {
+          ...(pathPrefix ? { pathPrefix } : {}),
+          filter: {
+            must: [{ key: 'domains', match: { value: 'synth-meta' } }],
+          },
+          fields: [
+            'file_path',
+            'synth_depth',
+            'synth_emphasis',
+            'synth_architect_tokens',
+            'synth_builder_tokens',
+            'synth_critic_tokens',
+            'has_error',
+            'generated_at_unix',
+            'synth_error_step',
+          ],
+        });
 
         const entities: Array<
           SynthEntity | Record<string, SynthEntity[keyof SynthEntity]>
@@ -112,34 +128,57 @@ export function registerSynthTools(api: PluginApi): void {
         let staleCount = 0;
         let errorCount = 0;
         let lockedCount = 0;
-        let neverSynthesized = 0;
+        let neverSynthesizedCount = 0;
         let totalArchTokens = 0;
         let totalBuilderTokens = 0;
         let totalCriticTokens = 0;
         let lastSynthPath: string | null = null;
         let lastSynthAt: string | null = null;
         let stalestPath: string | null = null;
-        const staleCandidates: Array<{
-          node: Parameters<typeof computeEffectiveStaleness>[0][0]['node'];
-          meta: Parameters<typeof computeEffectiveStaleness>[0][0]['meta'];
-          actualStaleness: number;
-          metaPath: string;
-        }> = [];
+        let stalestEffective = -1;
 
-        for (const node of tree.nodes.values()) {
-          if (pathPrefix && !node.metaPath.includes(pathPrefix)) continue;
+        const config = getConfig();
 
-          const meta = ensureMetaJson(node.metaPath);
+        for (const sf of scanFiles) {
+          const filePath = sf.file_path;
+          const depth =
+            typeof sf['synth_depth'] === 'number' ? sf['synth_depth'] : 0;
+          const emphasis =
+            typeof sf['synth_emphasis'] === 'number' ? sf['synth_emphasis'] : 1;
+          const hasError =
+            sf['has_error'] === true || sf['has_error'] === 'true';
+          const archTokens =
+            typeof sf['synth_architect_tokens'] === 'number'
+              ? sf['synth_architect_tokens']
+              : 0;
+          const buildTokens =
+            typeof sf['synth_builder_tokens'] === 'number'
+              ? sf['synth_builder_tokens']
+              : 0;
+          const critTokens =
+            typeof sf['synth_critic_tokens'] === 'number'
+              ? sf['synth_critic_tokens']
+              : 0;
+          const genAtUnix =
+            typeof sf['generated_at_unix'] === 'number'
+              ? sf['generated_at_unix']
+              : 0;
+          const locked = isLocked(normalizePath(filePath));
+          const neverSynth = genAtUnix === 0;
+
+          // Compute staleness from generated_at_unix
+          let stalenessSeconds: number;
+          if (neverSynth) {
+            stalenessSeconds = Infinity;
+          } else {
+            stalenessSeconds = Math.floor(Date.now() / 1000) - genAtUnix;
+            if (stalenessSeconds < 0) stalenessSeconds = 0;
+          }
 
           // Apply structured filter
           const filter = params.filter as Record<string, unknown> | undefined;
           if (filter) {
-            const staleness = actualStaleness(meta);
-            const hasErr = Boolean(meta._error);
-            const locked = isLocked(normalizePath(node.metaPath));
-            const neverSynth = !meta._generatedAt;
-
-            if (filter.hasError !== undefined && hasErr !== filter.hasError)
+            if (filter.hasError !== undefined && hasError !== filter.hasError)
               continue;
             if (
               filter.neverSynthesized !== undefined &&
@@ -150,57 +189,61 @@ export function registerSynthTools(api: PluginApi): void {
               continue;
             if (
               typeof filter.staleHours === 'number' &&
-              staleness < filter.staleHours * 3600
+              stalenessSeconds < filter.staleHours * 3600
             )
               continue;
           }
-          const staleness = actualStaleness(meta);
-          const locked = isLocked(normalizePath(node.metaPath));
-          const hasError = Boolean(meta._error);
 
-          if (staleness > 0) staleCount++;
+          if (stalenessSeconds > 0) staleCount++;
           if (hasError) errorCount++;
           if (locked) lockedCount++;
-          if (!meta._generatedAt) neverSynthesized++;
-          if (meta._architectTokens) totalArchTokens += meta._architectTokens;
-          if (meta._builderTokens) totalBuilderTokens += meta._builderTokens;
-          if (meta._criticTokens) totalCriticTokens += meta._criticTokens;
+          if (neverSynth) neverSynthesizedCount++;
+          if (archTokens > 0) totalArchTokens += archTokens;
+          if (buildTokens > 0) totalBuilderTokens += buildTokens;
+          if (critTokens > 0) totalCriticTokens += critTokens;
 
-          if (
-            meta._generatedAt &&
-            (!lastSynthAt || meta._generatedAt > lastSynthAt)
-          ) {
-            lastSynthAt = meta._generatedAt;
-            lastSynthPath = node.metaPath;
+          const genAtIso =
+            genAtUnix > 0 ? new Date(genAtUnix * 1000).toISOString() : null;
+
+          if (genAtIso && (!lastSynthAt || genAtIso > lastSynthAt)) {
+            lastSynthAt = genAtIso;
+            lastSynthPath = filePath;
           }
 
-          // Collect for batch staleness computation
-          staleCandidates.push({
-            node,
-            meta,
-            actualStaleness:
-              staleness === Infinity ? Number.MAX_SAFE_INTEGER : staleness,
-            metaPath: node.metaPath,
-          });
+          // Effective staleness for stalest computation
+          const depthFactor = Math.pow(1 + config.depthWeight, depth);
+          const effectiveStaleness =
+            (stalenessSeconds === Infinity
+              ? Number.MAX_SAFE_INTEGER
+              : stalenessSeconds) *
+            depthFactor *
+            emphasis;
+          if (effectiveStaleness > stalestEffective) {
+            stalestEffective = effectiveStaleness;
+            stalestPath = filePath;
+          }
+
+          // Derive meta path from file_path (strip /meta.json)
+          const metaPath = filePath.replace(/\/meta\.json$/, '');
 
           const fields = params.fields as string[] | undefined;
           const raw: SynthEntity = {
-            path: node.metaPath,
-            depth: meta._depth ?? node.treeDepth,
-            emphasis: meta._emphasis ?? 1,
+            path: metaPath,
+            depth,
+            emphasis,
             stalenessSeconds:
-              staleness === Infinity
+              stalenessSeconds === Infinity
                 ? 'never-synthesized'
-                : Math.round(staleness),
-            lastSynthesized: meta._generatedAt ?? null,
+                : Math.round(stalenessSeconds),
+            lastSynthesized: genAtIso,
             hasError,
             locked,
-            architectTokens: meta._architectTokens ?? null,
-            builderTokens: meta._builderTokens ?? null,
-            criticTokens: meta._criticTokens ?? null,
-            children: node.children.length,
+            architectTokens: archTokens > 0 ? archTokens : null,
+            builderTokens: buildTokens > 0 ? buildTokens : null,
+            criticTokens: critTokens > 0 ? critTokens : null,
+            children: 0,
           };
-          // Apply field projection if specified
+
           if (fields) {
             const projected: Record<string, SynthEntity[keyof SynthEntity]> =
               {};
@@ -213,25 +256,13 @@ export function registerSynthTools(api: PluginApi): void {
           }
         }
 
-        // Compute effective staleness using shared formula
-        if (staleCandidates.length > 0) {
-          const weighted = computeEffectiveStaleness(
-            staleCandidates,
-            getConfig().depthWeight,
-          );
-          const stalest = weighted.reduce((a, b) =>
-            b.effectiveStaleness > a.effectiveStaleness ? b : a,
-          );
-          stalestPath = staleCandidates[weighted.indexOf(stalest)].metaPath;
-        }
-
         return ok({
           summary: {
             total: entities.length,
             stale: staleCount,
             errors: errorCount,
             locked: lockedCount,
-            neverSynthesized,
+            neverSynthesized: neverSynthesizedCount,
             tokens: {
               architect: totalArchTokens,
               builder: totalBuilderTokens,
