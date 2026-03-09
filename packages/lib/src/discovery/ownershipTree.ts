@@ -76,3 +76,19 @@ export function buildOwnershipTree(metaPaths: string[]): OwnershipTree {
 
   return { nodes, roots };
 }
+
+/**
+ * Find a node in the ownership tree by meta path or owner path.
+ *
+ * @param tree - The ownership tree to search.
+ * @param targetPath - Path to search for (meta path or owner path).
+ * @returns The matching node, or undefined if not found.
+ */
+export function findNode(
+  tree: OwnershipTree,
+  targetPath: string,
+): MetaNode | undefined {
+  return Array.from(tree.nodes.values()).find(
+    (n) => n.metaPath === targetPath || n.ownerPath === targetPath,
+  );
+}

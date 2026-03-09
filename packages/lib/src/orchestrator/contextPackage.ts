@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { listArchiveFiles } from '../archive/index.js';
-import type { MetaNode } from '../discovery/index.js';
+import { filterInScope, type MetaNode } from '../discovery/index.js';
 import type { SynthContext, WatcherClient } from '../interfaces/index.js';
 import { paginatedScan } from '../paginatedScan.js';
 import type { MetaJson } from '../schema/index.js';
@@ -46,15 +46,6 @@ export function condenseScopeFiles(
     .join('\n');
 }
 
-/** Filter files to exclude child meta subtrees. */
-function excludeChildSubtrees(
-  files: string[],
-  childPrefixes: string[],
-): string[] {
-  if (childPrefixes.length === 0) return files;
-  return files.filter((f) => childPrefixes.every((cp) => !f.startsWith(cp)));
-}
-
 /**
  * Build the context package for a synthesis cycle.
  *
@@ -68,14 +59,14 @@ export async function buildContextPackage(
   meta: MetaJson,
   watcher: WatcherClient,
 ): Promise<SynthContext> {
-  const childPrefixes = node.children.map((c) => c.ownerPath + '/');
-
   // Scope files via watcher scan, excluding child subtrees
   const allScanFiles = await paginatedScan(watcher, {
     pathPrefix: node.ownerPath,
   });
-  const allFiles = allScanFiles.map((f) => f.file_path);
-  const scopeFiles = excludeChildSubtrees(allFiles, childPrefixes);
+  const scopeFiles = filterInScope(
+    node,
+    allScanFiles.map((f) => f.file_path),
+  );
 
   // Delta files: modified since _generatedAt
   let deltaFiles: string[];
@@ -87,9 +78,9 @@ export async function buildContextPackage(
       pathPrefix: node.ownerPath,
       modifiedAfter,
     });
-    deltaFiles = excludeChildSubtrees(
+    deltaFiles = filterInScope(
+      node,
       deltaScanFiles.map((f) => f.file_path),
-      childPrefixes,
     );
   } else {
     deltaFiles = scopeFiles; // First run: all files are delta

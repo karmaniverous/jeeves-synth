@@ -20,9 +20,12 @@ import {
   buildOwnershipTree,
   computeEffectiveStaleness,
   ensureMetaJson,
+  findNode,
   GatewayExecutor,
   globMetas,
+  hasSteerChanged,
   HttpWatcherClient,
+  isArchitectTriggered,
   isLocked,
   normalizePath,
   orchestrate,
@@ -152,9 +155,7 @@ async function runDetail(config: SynthConfig): Promise<void> {
   const tree = buildOwnershipTree(metaPaths);
   const normalized = normalizePath(targetPath);
 
-  const node = Array.from(tree.nodes.values()).find(
-    (n) => n.metaPath === normalized || n.ownerPath === normalized,
-  );
+  const node = findNode(tree, normalized);
   if (!node) {
     console.error('Meta not found: ' + targetPath);
     process.exit(1);
@@ -194,9 +195,7 @@ async function runPreview(config: SynthConfig): Promise<void> {
   let targetNode;
   if (targetPath) {
     const normalized = normalizePath(targetPath);
-    targetNode = Array.from(tree.nodes.values()).find(
-      (n) => n.metaPath === normalized || n.ownerPath === normalized,
-    );
+    targetNode = findNode(tree, normalized);
     if (!targetNode) {
       console.error('Meta not found: ' + targetPath);
       process.exit(1);
@@ -228,9 +227,17 @@ async function runPreview(config: SynthConfig): Promise<void> {
   const structureHash = computeStructureHash(scopeFiles);
   const structureChanged = structureHash !== meta._structureHash;
   const latestArchive = readLatestArchive(targetNode.metaPath);
-  const steerChanged = latestArchive
-    ? meta._steer !== latestArchive._steer
-    : Boolean(meta._steer);
+  const steerChanged = hasSteerChanged(
+    meta._steer,
+    latestArchive?._steer,
+    Boolean(latestArchive),
+  );
+  const architectTriggered = isArchitectTriggered(
+    meta,
+    structureChanged,
+    steerChanged,
+    config.architectEvery,
+  );
 
   output({
     target: targetNode.metaPath,
@@ -243,11 +250,7 @@ async function runPreview(config: SynthConfig): Promise<void> {
     scopeFiles: scopeFiles.length,
     structureChanged,
     steerChanged,
-    architectTriggered:
-      !meta._builder ||
-      structureChanged ||
-      steerChanged ||
-      (meta._synthesisCount ?? 0) >= config.architectEvery,
+    architectTriggered,
   });
 }
 

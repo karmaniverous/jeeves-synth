@@ -5,7 +5,12 @@
  */
 
 export { selectCandidate } from './selectCandidate.js';
-export { actualStaleness, isStale } from './staleness.js';
+export {
+  actualStaleness,
+  hasSteerChanged,
+  isArchitectTriggered,
+  isStale,
+} from './staleness.js';
 export {
   computeEffectiveStaleness,
   type StalenessCandidate,

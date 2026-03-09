@@ -15,6 +15,7 @@ export {
   buildOwnershipTree,
   ensureMetaJson,
   filterInScope,
+  findNode,
   getScopeExclusions,
   getScopePrefix,
   globMetas,
@@ -59,6 +60,8 @@ export { paginatedScan } from './paginatedScan.js';
 export {
   actualStaleness,
   computeEffectiveStaleness,
+  hasSteerChanged,
+  isArchitectTriggered,
   isStale,
   selectCandidate,
   type StalenessCandidate,

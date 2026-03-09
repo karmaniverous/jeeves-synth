@@ -11,8 +11,11 @@ import {
   computeStructureHash,
   ensureMetaJson,
   filterInScope,
+  findNode,
   globMetas,
+  hasSteerChanged,
   HttpWatcherClient,
+  isArchitectTriggered,
   isLocked,
   normalizePath,
   paginatedScan,
@@ -331,9 +334,7 @@ export function registerSynthTools(api: PluginApi): void {
         const metaPaths = globMetas(getWatchPaths());
         const tree = buildOwnershipTree(metaPaths);
 
-        const targetNode = Array.from(tree.nodes.values()).find(
-          (n) => n.metaPath === targetPath || n.ownerPath === targetPath,
-        );
+        const targetNode = findNode(tree, targetPath);
         if (!targetNode) {
           return fail('Meta path not found: ' + targetPath);
         }
@@ -422,9 +423,7 @@ export function registerSynthTools(api: PluginApi): void {
         let targetNode;
         if (targetPath) {
           const normalized = normalizePath(targetPath);
-          targetNode = Array.from(tree.nodes.values()).find(
-            (n) => n.metaPath === normalized || n.ownerPath === normalized,
-          );
+          targetNode = findNode(tree, normalized);
           if (!targetNode) {
             return fail('Meta path not found: ' + targetPath);
           }
@@ -467,16 +466,19 @@ export function registerSynthTools(api: PluginApi): void {
 
         // Steer change
         const latestArchive = readLatestArchive(targetNode.metaPath);
-        const steerChanged = latestArchive
-          ? meta._steer !== latestArchive._steer
-          : Boolean(meta._steer);
+        const steerChanged = hasSteerChanged(
+          meta._steer,
+          latestArchive?._steer,
+          Boolean(latestArchive),
+        );
 
         // Architect trigger check
-        const architectTriggered =
-          !meta._builder ||
-          structureChanged ||
-          steerChanged ||
-          (meta._synthesisCount ?? 0) >= getConfig().architectEvery;
+        const architectTriggered = isArchitectTriggered(
+          meta,
+          structureChanged,
+          steerChanged,
+          getConfig().architectEvery,
+        );
 
         // Delta files
         let deltaFiles: string[] = [];

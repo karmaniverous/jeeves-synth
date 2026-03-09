@@ -7,33 +7,11 @@
  * @module promptInjection
  */
 
-/** Watcher scan response shape. */
-interface ScanResponse {
-  files: Array<{
-    file_path: string;
-    modified_at: number;
-    [key: string]: unknown;
-  }>;
-  next?: string;
-}
-
-/**
- * Fetch JSON from a URL with timeout.
- *
- * @param url - URL to fetch.
- * @param options - Fetch options.
- * @returns Parsed JSON response.
- */
-async function fetchJson(url: string, options?: RequestInit): Promise<unknown> {
-  const res = await fetch(url, {
-    ...options,
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!res.ok) {
-    throw new Error('HTTP ' + res.status.toString() + ' from ' + url);
-  }
-  return res.json();
-}
+import {
+  HttpWatcherClient,
+  paginatedScan,
+  type ScanFile,
+} from '@karmaniverous/jeeves-meta';
 
 /**
  * Generate the Meta menu Markdown for TOOLS.md.
@@ -47,36 +25,31 @@ async function fetchJson(url: string, options?: RequestInit): Promise<unknown> {
  * @returns Markdown string for the Meta section.
  */
 export async function generateMetaMenu(watcherUrl: string): Promise<string> {
-  let entities: ScanResponse['files'] = [];
+  let entities: ScanFile[] = [];
 
   try {
-    const scanResult = (await fetchJson(watcherUrl + '/scan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filter: {
-          must: [
-            {
-              key: 'domains',
-              match: { value: 'synth-meta' },
-            },
-          ],
-        },
-        fields: [
-          'synth_depth',
-          'synth_emphasis',
-          'synth_synthesis_count',
-          'synth_architect_tokens',
-          'synth_builder_tokens',
-          'synth_critic_tokens',
-          'synth_error_step',
-          'generated_at_unix',
-          'has_error',
+    const watcher = new HttpWatcherClient({ baseUrl: watcherUrl });
+    entities = await paginatedScan(watcher, {
+      filter: {
+        must: [
+          {
+            key: 'domains',
+            match: { value: 'synth-meta' },
+          },
         ],
-        limit: 1000,
-      }),
-    })) as ScanResponse;
-    entities = scanResult.files;
+      },
+      fields: [
+        'synth_depth',
+        'synth_emphasis',
+        'synth_synthesis_count',
+        'synth_architect_tokens',
+        'synth_builder_tokens',
+        'synth_critic_tokens',
+        'synth_error_step',
+        'generated_at_unix',
+        'has_error',
+      ],
+    });
   } catch {
     return [
       '> **ACTION REQUIRED: jeeves-watcher is unreachable.**',

@@ -29,6 +29,8 @@ import { paginatedScan } from '../paginatedScan.js';
 import {
   actualStaleness,
   computeEffectiveStaleness,
+  hasSteerChanged,
+  isArchitectTriggered,
   isStale,
 } from '../scheduling/index.js';
 import type { MetaJson, SynthConfig, SynthError } from '../schema/index.js';
@@ -195,19 +197,22 @@ async function orchestrateOnce(
 
     // Step 6: Steer change detection
     const latestArchive = readLatestArchive(node.metaPath);
-    const steerChanged = latestArchive
-      ? currentMeta._steer !== latestArchive._steer
-      : Boolean(currentMeta._steer);
+    const steerChanged = hasSteerChanged(
+      currentMeta._steer,
+      latestArchive?._steer,
+      Boolean(latestArchive),
+    );
 
     // Step 7: Compute context
     const ctx = await buildContextPackage(node, currentMeta, watcher);
 
     // Step 8: Architect (conditional)
-    const architectTriggered =
-      !currentMeta._builder ||
-      structureChanged ||
-      steerChanged ||
-      (currentMeta._synthesisCount ?? 0) >= config.architectEvery;
+    const architectTriggered = isArchitectTriggered(
+      currentMeta,
+      structureChanged,
+      steerChanged,
+      config.architectEvery,
+    );
 
     let builderBrief = currentMeta._builder ?? '';
     let synthesisCount = currentMeta._synthesisCount ?? 0;

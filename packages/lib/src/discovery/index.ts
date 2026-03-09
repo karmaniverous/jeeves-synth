@@ -6,6 +6,6 @@
 
 export { ensureMetaJson } from './ensureMetaJson.js';
 export { globMetas } from './globMetas.js';
-export { buildOwnershipTree } from './ownershipTree.js';
+export { buildOwnershipTree, findNode } from './ownershipTree.js';
 export { filterInScope, getScopeExclusions, getScopePrefix } from './scope.js';
 export type { MetaNode, OwnershipTree } from './types.js';
