@@ -1,6 +1,6 @@
 {
   "name": "@karmaniverous/jeeves-meta-openclaw",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "author": "Jason Williscroft",
   "description": "OpenClaw plugin for jeeves-meta — synthesis tools and virtual rule registration",
   "license": "BSD-3-Clause",
