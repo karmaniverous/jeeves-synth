@@ -38,25 +38,24 @@ function getPluginConfig(api: PluginApi): Record<string, unknown> | undefined {
   return api.config?.plugins?.entries?.[PLUGIN_NAME]?.config;
 }
 
-/** Resolve watcher URL from plugin config. */
-export function getWatcherUrl(api: PluginApi): string {
-  const url = getPluginConfig(api)?.watcherUrl;
-  return typeof url === 'string' ? url : 'http://127.0.0.1:1936';
-}
-
-/** Resolve watch paths from plugin config. */
-export function getWatchPaths(api: PluginApi): string[] {
-  const paths = getPluginConfig(api)?.watchPaths;
-  return Array.isArray(paths) ? (paths as string[]) : ['j:/domains'];
-}
-
 /**
- * Get the config file path from plugin settings.
- * Default: J:/config/jeeves-meta.config.json
+ * Resolve the config file path.
+ *
+ * Resolution order:
+ * 1. Plugin config `configPath` setting
+ * 2. `JEEVES_META_CONFIG` environment variable
+ * 3. Error — no default path
  */
 export function getConfigPath(api: PluginApi): string {
-  const p = getPluginConfig(api)?.configPath;
-  return typeof p === 'string' ? p : 'J:/config/jeeves-meta.config.json';
+  const fromPlugin = getPluginConfig(api)?.configPath;
+  if (typeof fromPlugin === 'string') return fromPlugin;
+
+  const fromEnv = process.env['JEEVES_META_CONFIG'];
+  if (fromEnv) return fromEnv;
+
+  throw new Error(
+    'jeeves-meta config path not found. Set configPath in plugin config or JEEVES_META_CONFIG env var.',
+  );
 }
 
 /** Format a successful tool result. */

@@ -17,6 +17,12 @@ export const synthConfigSchema = z.object({
   /** Watcher service base URL. */
   watcherUrl: z.url(),
 
+  /** OpenClaw gateway base URL for subprocess spawning. */
+  gatewayUrl: z.url().default('http://127.0.0.1:3000'),
+
+  /** Optional API key for gateway authentication. */
+  gatewayApiKey: z.string().optional(),
+
   /** Run architect every N cycles (per meta). */
   architectEvery: z.number().int().min(1).default(10),
 

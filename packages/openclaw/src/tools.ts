@@ -24,8 +24,6 @@ import { loadSynthConfig } from './configLoader.js';
 import {
   fail,
   getConfigPath,
-  getWatcherUrl,
-  getWatchPaths,
   ok,
   type PluginApi,
   type ToolResult,
@@ -33,8 +31,6 @@ import {
 
 /** Register all synth_* tools. */
 export function registerSynthTools(api: PluginApi): void {
-  const watcherUrl = getWatcherUrl(api);
-  const watchPaths = getWatchPaths(api);
   const configPath = getConfigPath(api);
 
   // Lazy-load config (resolved once on first use)
@@ -60,6 +56,12 @@ export function registerSynthTools(api: PluginApi): void {
     }
     return _config;
   };
+
+  /** Derive watcherUrl from loaded config. */
+  const getWatcherUrl = (): string => getConfig().watcherUrl;
+
+  /** Derive watchPaths from loaded config. */
+  const getWatchPaths = (): string[] => getConfig().watchPaths;
 
   // ─── synth_list ──────────────────────────────────────────────
   api.registerTool({
@@ -100,7 +102,7 @@ export function registerSynthTools(api: PluginApi): void {
       try {
         const pathPrefix = params.pathPrefix as string | undefined;
         await Promise.resolve();
-        const metaPaths = globMetas(watchPaths);
+        const metaPaths = globMetas(getWatchPaths());
         const tree = buildOwnershipTree(metaPaths);
 
         const entities: Array<
@@ -294,7 +296,7 @@ export function registerSynthTools(api: PluginApi): void {
         ]);
         const fields = params.fields as string[] | undefined;
 
-        const metaPaths = globMetas(watchPaths);
+        const metaPaths = globMetas(getWatchPaths());
         const tree = buildOwnershipTree(metaPaths);
 
         const targetNode = Array.from(tree.nodes.values()).find(
@@ -382,7 +384,7 @@ export function registerSynthTools(api: PluginApi): void {
     ): Promise<ToolResult> => {
       try {
         const targetPath = params.path as string | undefined;
-        const metaPaths = globMetas(watchPaths);
+        const metaPaths = globMetas(getWatchPaths());
         const tree = buildOwnershipTree(metaPaths);
 
         let targetNode;
@@ -418,7 +420,7 @@ export function registerSynthTools(api: PluginApi): void {
         }
 
         const meta = ensureMetaJson(targetNode.metaPath);
-        const watcher = new HttpWatcherClient({ baseUrl: watcherUrl });
+        const watcher = new HttpWatcherClient({ baseUrl: getWatcherUrl() });
 
         // Scope files (paginated for completeness)
         const allScanFiles = await paginatedScan(watcher, {
@@ -525,8 +527,11 @@ export function registerSynthTools(api: PluginApi): void {
         // Load config from canonical config file
         const config = getConfig();
 
-        const executor = new GatewayExecutor();
-        const watcher = new HttpWatcherClient({ baseUrl: watcherUrl });
+        const executor = new GatewayExecutor({
+          gatewayUrl: config.gatewayUrl,
+          apiKey: config.gatewayApiKey,
+        });
+        const watcher = new HttpWatcherClient({ baseUrl: getWatcherUrl() });
 
         // If path specified, temporarily override watchPaths to target it
         const targetPath = params.path as string | undefined;

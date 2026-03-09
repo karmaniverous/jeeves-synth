@@ -6,8 +6,9 @@
  * @packageDocumentation
  */
 
+import { loadSynthConfig } from './configLoader.js';
 import type { PluginApi } from './helpers.js';
-import { getWatcherUrl } from './helpers.js';
+import { getConfigPath } from './helpers.js';
 import { registerSynthRules } from './rules.js';
 import { registerSynthTools } from './tools.js';
 
@@ -16,8 +17,8 @@ export default function register(api: PluginApi): void {
   registerSynthTools(api);
 
   // Register virtual rules with watcher (fire-and-forget at startup)
-  const watcherUrl = getWatcherUrl(api);
-  registerSynthRules(watcherUrl).catch((err: unknown) => {
+  const config = loadSynthConfig(getConfigPath(api));
+  registerSynthRules(config.watcherUrl).catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[jeeves-meta] Failed to register virtual rules:', message);
   });

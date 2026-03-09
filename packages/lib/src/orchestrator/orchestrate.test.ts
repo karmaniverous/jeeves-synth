@@ -18,6 +18,7 @@ const testRoot = join(
 const config: SynthConfig = {
   watchPaths: [testRoot],
   watcherUrl: 'http://localhost:3456',
+  gatewayUrl: 'http://127.0.0.1:3000',
   depthWeight: 1,
   architectEvery: 10,
   maxArchive: 20,
