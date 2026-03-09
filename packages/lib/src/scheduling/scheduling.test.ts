@@ -3,7 +3,11 @@ import { describe, expect, it, vi } from 'vitest';
 import type { MetaNode } from '../discovery/index.js';
 import type { MetaJson } from '../schema/index.js';
 import { selectCandidate } from './selectCandidate.js';
-import { actualStaleness } from './staleness.js';
+import {
+  actualStaleness,
+  hasSteerChanged,
+  isArchitectTriggered,
+} from './staleness.js';
 import { computeEffectiveStaleness } from './weightedFormula.js';
 
 function makeNode(depth: number): MetaNode {
@@ -213,5 +217,50 @@ describe('isStale', () => {
     const meta = makeMeta({ _generatedAt: '2026-01-01T00:00:00Z' });
     const result = await isStale('/test', meta, watcher);
     expect(result).toBe(false);
+  });
+});
+
+describe('isArchitectTriggered', () => {
+  it('triggers when no cached builder', () => {
+    const meta = { _id: 'test' };
+    expect(isArchitectTriggered(meta, false, false, 10)).toBe(true);
+  });
+
+  it('triggers when structure changed', () => {
+    const meta = { _id: 'test', _builder: 'cached' };
+    expect(isArchitectTriggered(meta, true, false, 10)).toBe(true);
+  });
+
+  it('triggers when steer changed', () => {
+    const meta = { _id: 'test', _builder: 'cached' };
+    expect(isArchitectTriggered(meta, false, true, 10)).toBe(true);
+  });
+
+  it('triggers when synthesis count exceeds architectEvery', () => {
+    const meta = { _id: 'test', _builder: 'cached', _synthesisCount: 10 };
+    expect(isArchitectTriggered(meta, false, false, 10)).toBe(true);
+  });
+
+  it('does not trigger when nothing changed and count below threshold', () => {
+    const meta = { _id: 'test', _builder: 'cached', _synthesisCount: 3 };
+    expect(isArchitectTriggered(meta, false, false, 10)).toBe(false);
+  });
+});
+
+describe('hasSteerChanged', () => {
+  it('returns true when steer is set and no archive exists', () => {
+    expect(hasSteerChanged('focus on X', undefined, false)).toBe(true);
+  });
+
+  it('returns false when no steer and no archive', () => {
+    expect(hasSteerChanged(undefined, undefined, false)).toBe(false);
+  });
+
+  it('returns true when steer differs from archive', () => {
+    expect(hasSteerChanged('new focus', 'old focus', true)).toBe(true);
+  });
+
+  it('returns false when steer matches archive', () => {
+    expect(hasSteerChanged('same', 'same', true)).toBe(false);
   });
 });

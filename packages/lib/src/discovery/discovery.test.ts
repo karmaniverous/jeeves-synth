@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { type MetaJson, metaJsonSchema } from '../schema/index.js';
 import { ensureMetaJson } from './ensureMetaJson.js';
 import { globMetas } from './globMetas.js';
-import { buildOwnershipTree } from './ownershipTree.js';
+import { buildOwnershipTree, findNode } from './ownershipTree.js';
 import { filterInScope, getScopeExclusions, getScopePrefix } from './scope.js';
 
 const testRoot = join(tmpdir(), `jeeves-meta-test-${Date.now().toString()}`);
@@ -156,5 +156,37 @@ describe('scope', () => {
     expect(inScope).toContain(abs('a/file2.txt'));
     expect(inScope).not.toContain(abs('a/b/file3.txt'));
     expect(inScope).toContain(abs('a/b/.meta/meta.json'));
+  });
+});
+
+describe('findNode', () => {
+  it('finds node by metaPath', () => {
+    mkdirSync(join(testRoot, 'domain/.meta'), { recursive: true });
+    const metaPaths = globMetas([testRoot]);
+    const tree = buildOwnershipTree(metaPaths);
+    const metaPath = Array.from(tree.nodes.values())[0].metaPath;
+
+    const found = findNode(tree, metaPath);
+    expect(found).toBeDefined();
+    expect(found!.metaPath).toBe(metaPath);
+  });
+
+  it('finds node by ownerPath', () => {
+    mkdirSync(join(testRoot, 'domain/.meta'), { recursive: true });
+    const metaPaths = globMetas([testRoot]);
+    const tree = buildOwnershipTree(metaPaths);
+    const ownerPath = Array.from(tree.nodes.values())[0].ownerPath;
+
+    const found = findNode(tree, ownerPath);
+    expect(found).toBeDefined();
+    expect(found!.ownerPath).toBe(ownerPath);
+  });
+
+  it('returns undefined for non-existent path', () => {
+    mkdirSync(join(testRoot, 'domain/.meta'), { recursive: true });
+    const metaPaths = globMetas([testRoot]);
+    const tree = buildOwnershipTree(metaPaths);
+
+    expect(findNode(tree, '/nonexistent/path')).toBeUndefined();
   });
 });
