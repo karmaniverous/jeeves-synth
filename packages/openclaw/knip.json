@@ -1,6 +1,13 @@
 {
-  "entry": ["src/index.ts", "src/cli.ts"],
-  "project": ["src/**", "scripts/**", "!dist/**"],
+  "entry": [
+    "src/index.ts",
+    "src/cli.ts"
+  ],
+  "project": [
+    "src/**",
+    "scripts/**",
+    "!dist/**"
+  ],
   "rules": {
     "binaries": "off",
     "devDependencies": "off",
@@ -8,6 +15,11 @@
     "types": "off"
   },
   "vitest": {
-    "entry": ["src/**/*.test.ts"]
-  }
+    "entry": [
+      "src/**/*.test.ts"
+    ]
+  },
+  "ignoreDependencies": [
+    "@karmaniverous/jeeves-meta"
+  ]
 }
