@@ -2,8 +2,9 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
-#### 0.2.0
+#### 0.2.1
 
+- fix: SKILL.md bootstrap + duplicate shebang [`#17`](https://github.com/karmaniverous/jeeves-meta/pull/17)
 - fix: clean up knip configs in both packages [`#16`](https://github.com/karmaniverous/jeeves-meta/pull/16)
 - fix: add outDir to CLI rollup builds for clean-build compatibility [`#15`](https://github.com/karmaniverous/jeeves-meta/pull/15)
 - fix: resolve TypeDoc warnings [`#14`](https://github.com/karmaniverous/jeeves-meta/pull/14)
@@ -39,13 +40,16 @@ All notable changes to this project will be documented in this file. Dates are d
 - fix: round 3 spec/impl alignment [`9c7c62b`](https://github.com/karmaniverous/jeeves-meta/commit/9c7c62bf0a3d60f2cd4636fe2153013413cd69ea)
 - add _emphasis meta field and skipUnchanged config option [`787a7c5`](https://github.com/karmaniverous/jeeves-meta/commit/787a7c52b8f28da2d0c9f725892567de4fb3c231)
 - fix: round 4 gaps + architect self-reference [`6d6e2c3`](https://github.com/karmaniverous/jeeves-meta/commit/6d6e2c30c9a5e5285828a9f62d37f909137c9af3)
+- chore: release @karmaniverous/jeeves-meta-openclaw v0.1.0 [`fcf4d15`](https://github.com/karmaniverous/jeeves-meta/commit/fcf4d150969a31aa0ff8ef6326dff99f08af27ce)
 - fix: round 5 — structure hash scoping + SKILL.md + preview pagination [`c9bfffc`](https://github.com/karmaniverous/jeeves-meta/commit/c9bfffc4d466eab4d53214ad309c86a5dcd17bfa)
 - ci: add GitHub Pages docs deployment workflow [`9c131f1`](https://github.com/karmaniverous/jeeves-meta/commit/9c131f14b1171cc5f077960017f28deeb44a0852)
 - chore: release @karmaniverous/jeeves-meta v0.1.0 [`17bcc60`](https://github.com/karmaniverous/jeeves-meta/commit/17bcc607e612ec3577382b90b7e7e7cd45afe63b)
 - fix all spec-vs-implementation gaps (round 2) [`351dec5`](https://github.com/karmaniverous/jeeves-meta/commit/351dec535b43ec3811772192c9656284d200b338)
+- fix: SKILL.md bootstrap with global install, remove duplicate shebang [`4aafdd5`](https://github.com/karmaniverous/jeeves-meta/commit/4aafdd55019699fd82a5ef83651efe705fe60274)
 - docs: move changelogs to package level [`15a9c8d`](https://github.com/karmaniverous/jeeves-meta/commit/15a9c8d17afe342af81cc940aa32047f003ea155)
 - added env.local.template [`4d0ebcc`](https://github.com/karmaniverous/jeeves-meta/commit/4d0ebcc82c8290a9bc283f8227b726888dfd3ec7)
 - docs: resolve all typedoc warnings [`e340852`](https://github.com/karmaniverous/jeeves-meta/commit/e3408521be8c29691ec4fb807587c7430f689a89)
+- chore: release @karmaniverous/jeeves-meta v0.2.0 [`f14c168`](https://github.com/karmaniverous/jeeves-meta/commit/f14c16829e7c073d4a9fba70947b96405c2be457)
 - revert: undo schema extraction, keep docs fixes [`8ef3342`](https://github.com/karmaniverous/jeeves-meta/commit/8ef33420c6995601c9b4c8e714b0f7c9df8adba5)
 - installed dotenvx [`d3c437b`](https://github.com/karmaniverous/jeeves-meta/commit/d3c437bcbd4504b1a0d3ef85492d783c892e42e0)
 - fix: correct lib release-it tag from service to lib [`cc9f815`](https://github.com/karmaniverous/jeeves-meta/commit/cc9f81514a8528e684432bf693ab6dca7fbbe02c)

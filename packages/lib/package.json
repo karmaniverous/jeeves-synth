@@ -1,6 +1,6 @@
 {
   "name": "@karmaniverous/jeeves-meta",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "Jason Williscroft",
   "description": "Knowledge synthesis engine for the Jeeves platform",
   "license": "BSD-3-Clause",
