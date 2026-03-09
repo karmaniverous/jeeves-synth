@@ -115,18 +115,37 @@ export class GatewayExecutor implements SynthExecutor {
       if (!historyRes.ok) continue;
 
       const history = (await historyRes.json()) as {
-        messages?: Array<{ role: string; content: string }>;
+        messages?: Array<{
+          role: string;
+          content: string;
+          usage?: { totalTokens?: number };
+        }>;
         status?: string;
+        usage?: { totalTokens?: number };
       };
 
       if (history.status === 'completed' || history.status === 'done') {
+        // Extract token usage from session-level or message-level usage
+        let tokens: number | undefined;
+        if (history.usage?.totalTokens) {
+          tokens = history.usage.totalTokens;
+        } else {
+          // Sum message-level usage as fallback
+          let sum = 0;
+          for (const msg of history.messages ?? []) {
+            if (msg.usage?.totalTokens) sum += msg.usage.totalTokens;
+          }
+          if (sum > 0) tokens = sum;
+        }
+
+        // Extract the last assistant message as output
         const messages = history.messages ?? [];
         for (let i = messages.length - 1; i >= 0; i--) {
           if (messages[i].role === 'assistant' && messages[i].content) {
-            return { output: messages[i].content };
+            return { output: messages[i].content, tokens };
           }
         }
-        return { output: '' };
+        return { output: '', tokens };
       }
     }
 
