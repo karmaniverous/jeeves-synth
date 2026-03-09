@@ -10,6 +10,7 @@ export {
   pruneArchive,
   readLatestArchive,
 } from './archive/index.js';
+export { loadSynthConfig, resolveConfigPath } from './configLoader.js';
 export {
   buildOwnershipTree,
   ensureMetaJson,

@@ -107,5 +107,8 @@
     "npm": {
       "publish": true
     }
+  },
+  "bin": {
+    "jeeves-meta": "dist/cli.js"
   }
 }

@@ -31,4 +31,29 @@ const buildTypes: RollupOptions = {
   plugins: [dtsPlugin()],
 };
 
-export default [buildLibrary, buildTypes];
+const buildCli: RollupOptions = {
+  input: 'src/cli.ts',
+  external: ['zod', 'tslib', 'node:fs', 'node:path', 'node:crypto'],
+  output: {
+    file: 'dist/cli.js',
+    format: 'esm',
+    banner: '#!/usr/bin/env node',
+    inlineDynamicImports: true,
+  },
+  plugins: [
+    commonjsPlugin(),
+    jsonPlugin(),
+    nodeResolve(),
+    typescriptPlugin({
+      tsconfig: './tsconfig.json',
+      outputToFilesystem: false,
+      include: ['src/**/*.ts'],
+      exclude: ['**/*.test.ts'],
+      noEmit: false,
+      declaration: false,
+      incremental: false,
+    }),
+  ],
+};
+
+export default [buildLibrary, buildTypes, buildCli];
