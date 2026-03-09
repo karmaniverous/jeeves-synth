@@ -109,7 +109,7 @@ function finalizeCycle(
  * @param watcher - Watcher HTTP client.
  * @returns Result indicating whether synthesis occurred.
  */
-export async function orchestrate(
+async function orchestrateOnce(
   config: SynthConfig,
   executor: SynthExecutor,
   watcher: WatcherClient,
@@ -316,4 +316,33 @@ export async function orchestrate(
     // Step 13: Release lock
     releaseLock(node.metaPath);
   }
+}
+/**
+ * Run synthesis cycles up to batchSize.
+ *
+ * Calls orchestrateOnce() in a loop, stopping when batchSize is reached
+ * or no more candidates are available.
+ *
+ * @param config - Validated synthesis config.
+ * @param executor - Pluggable LLM executor.
+ * @param watcher - Watcher HTTP client.
+ * @returns Array of results from each cycle.
+ */
+export async function orchestrate(
+  config: SynthConfig,
+  executor: SynthExecutor,
+  watcher: WatcherClient,
+): Promise<OrchestrateResult> {
+  const results: OrchestrateResult[] = [];
+
+  for (let i = 0; i < config.batchSize; i++) {
+    const result = await orchestrateOnce(config, executor, watcher);
+    results.push(result);
+    if (!result.synthesized) break; // No more candidates
+  }
+
+  // Return the last meaningful result (or first if none synthesized)
+  const synthesized = results.filter((r) => r.synthesized);
+  if (synthesized.length === 0) return { synthesized: false };
+  return synthesized[synthesized.length - 1];
 }

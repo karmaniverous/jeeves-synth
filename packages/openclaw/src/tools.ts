@@ -37,6 +37,7 @@ export function registerSynthTools(api: PluginApi): void {
 
   // ─── synth_list ──────────────────────────────────────────────
   api.registerTool({
+    // TODO: migrate from filesystem glob to watcher_scan for dashboard performance
     name: 'synth_list',
     description:
       'List metas with summary stats and per-meta projection. Replaces synth_status + synth_entities.',
