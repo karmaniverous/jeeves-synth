@@ -1,3 +1,35 @@
-# Changelog
+### Changelog
 
-Generated automatically by the release process.
+All notable changes to this project will be documented in this file. Dates are displayed in UTC.
+
+#### 0.1.0
+
+- chore: scaffold monorepo from jeeves-watcher template [`551f4c3`](https://github.com/karmaniverous/jeeves-meta/commit/551f4c36499d8cee1cb499bef1447a735afaca9a)
+- docs: add TypeDoc setup, READMEs, guides, and PlantUML diagrams [`bb41d88`](https://github.com/karmaniverous/jeeves-meta/commit/bb41d88ade5e639aebe47dbce9ddd4a7ffe7f429)
+- feat: Phase 5 - orchestrator (13-step synthesis cycle) [`1550425`](https://github.com/karmaniverous/jeeves-meta/commit/155042519009209432d7a2ca282c53e75221937c)
+- refactor: SOLID/DRY pass and test coverage [`5c52911`](https://github.com/karmaniverous/jeeves-meta/commit/5c52911f76d9576ce2976149a2b17d2f8ec2a6a2)
+- feat: Phase 1 - schemas and interfaces [`e6a1ad5`](https://github.com/karmaniverous/jeeves-meta/commit/e6a1ad5d8d9f8c4a8a6f82be6c1c304496036168)
+- implement dev plan gaps: token tracking, tool refactor, scope condensation [`586eb22`](https://github.com/karmaniverous/jeeves-meta/commit/586eb22769e722dddd340d4feb88fba0809487ac)
+- feat: Phase 2 - discovery and ownership tree [`0fe2e01`](https://github.com/karmaniverous/jeeves-meta/commit/0fe2e010aa2a824f8c9a8e28af2bd18ec39dd3ce)
+- feat: Phase 4 - archive, structure hash, and lock [`3364296`](https://github.com/karmaniverous/jeeves-meta/commit/3364296901696369497a68f4bf9861bb5a27eb79)
+- feat: Phase 7 - OpenClaw plugin with synth tools [`235559d`](https://github.com/karmaniverous/jeeves-meta/commit/235559d7584b2e42f73c7a8e1eac7eb95ba57b89)
+- feat: virtual rules + synth_trigger + GatewayExecutor [`6cd2aa4`](https://github.com/karmaniverous/jeeves-meta/commit/6cd2aa46aa0c11cbdf4651908b9997e2195a67f4)
+- feat: Phase 3 - scheduling and staleness [`c299fe4`](https://github.com/karmaniverous/jeeves-meta/commit/c299fe463ac78e68b8ebb6a951d1836350cc5170)
+- feat: Phase 6 - HttpWatcherClient implementation [`917388f`](https://github.com/karmaniverous/jeeves-meta/commit/917388f01d03f846c77b1013592d6e9100bc0ae5)
+- resolve spec-vs-implementation gaps [`b1e177b`](https://github.com/karmaniverous/jeeves-meta/commit/b1e177b892d07d15374b623cfdfcb73536ded3c3)
+- chore: rename jeeves-synth to jeeves-meta everywhere [`2406330`](https://github.com/karmaniverous/jeeves-meta/commit/240633079c56e798448eb410516e4e2a9de4caf9)
+- fix: type SynthEntity, resolve all lint/tsdoc warnings, clean knip findings [`ded29a8`](https://github.com/karmaniverous/jeeves-meta/commit/ded29a8c16ede6b0d823dc110f3a9843e1574eff)
+- fix: round 3 spec/impl alignment [`9c7c62b`](https://github.com/karmaniverous/jeeves-meta/commit/9c7c62bf0a3d60f2cd4636fe2153013413cd69ea)
+- add _emphasis meta field and skipUnchanged config option [`787a7c5`](https://github.com/karmaniverous/jeeves-meta/commit/787a7c52b8f28da2d0c9f725892567de4fb3c231)
+- fix: round 4 gaps + architect self-reference [`6d6e2c3`](https://github.com/karmaniverous/jeeves-meta/commit/6d6e2c30c9a5e5285828a9f62d37f909137c9af3)
+- fix: round 5 — structure hash scoping + SKILL.md + preview pagination [`c9bfffc`](https://github.com/karmaniverous/jeeves-meta/commit/c9bfffc4d466eab4d53214ad309c86a5dcd17bfa)
+- ci: add GitHub Pages docs deployment workflow [`9c131f1`](https://github.com/karmaniverous/jeeves-meta/commit/9c131f14b1171cc5f077960017f28deeb44a0852)
+- fix all spec-vs-implementation gaps (round 2) [`351dec5`](https://github.com/karmaniverous/jeeves-meta/commit/351dec535b43ec3811772192c9656284d200b338)
+- docs: move changelogs to package level [`15a9c8d`](https://github.com/karmaniverous/jeeves-meta/commit/15a9c8d17afe342af81cc940aa32047f003ea155)
+- added env.local.template [`4d0ebcc`](https://github.com/karmaniverous/jeeves-meta/commit/4d0ebcc82c8290a9bc283f8227b726888dfd3ec7)
+- docs: resolve all typedoc warnings [`e340852`](https://github.com/karmaniverous/jeeves-meta/commit/e3408521be8c29691ec4fb807587c7430f689a89)
+- revert: undo schema extraction, keep docs fixes [`8ef3342`](https://github.com/karmaniverous/jeeves-meta/commit/8ef33420c6995601c9b4c8e714b0f7c9df8adba5)
+- installed dotenvx [`d3c437b`](https://github.com/karmaniverous/jeeves-meta/commit/d3c437bcbd4504b1a0d3ef85492d783c892e42e0)
+- fix: correct lib release-it tag from service to lib [`cc9f815`](https://github.com/karmaniverous/jeeves-meta/commit/cc9f81514a8528e684432bf693ab6dca7fbbe02c)
+- change depthWeight default from 1 to 0.5 [`5cf4e3c`](https://github.com/karmaniverous/jeeves-meta/commit/5cf4e3c147f737875e7919538728279f07b20dd8)
+- ci: add build step before docs generation [`888b279`](https://github.com/karmaniverous/jeeves-meta/commit/888b279c328782d2f8503e7750f8dd4bf8cdad43)
