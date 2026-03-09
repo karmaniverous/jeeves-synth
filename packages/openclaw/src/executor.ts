@@ -18,7 +18,7 @@ const DEFAULT_POLL_INTERVAL_MS = 5000;
 const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes
 
 /** Options for the GatewayExecutor. */
-export interface GatewayExecutorOptions {
+interface GatewayExecutorOptions {
   /** OpenClaw gateway base URL. Default: http://127.0.0.1:3000 */
   gatewayUrl?: string;
   /** API key for gateway authentication. */

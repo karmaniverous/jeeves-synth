@@ -30,7 +30,7 @@ export interface StalenessCandidate {
  * Per-meta _emphasis (default 1) multiplies depthWeight, allowing individual
  * metas to tune how much their tree position affects scheduling.
  *
- * @param candidates - Array of { node, meta, actualStaleness }.
+ * @param candidates - Array of \{ node, meta, actualStaleness \}.
  * @param depthWeight - Exponent for depth weighting (0 = pure staleness).
  * @returns Same array with effectiveStaleness computed.
  */

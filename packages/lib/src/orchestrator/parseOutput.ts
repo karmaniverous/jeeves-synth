@@ -1,9 +1,9 @@
 /**
  * Parse subprocess outputs for each synthesis step.
  *
- * - Architect: returns text -> _builder
- * - Builder: returns JSON -> _content + structured fields
- * - Critic: returns text -> _feedback
+ * - Architect: returns text \> _builder
+ * - Builder: returns JSON \> _content + structured fields
+ * - Critic: returns text \> _feedback
  *
  * @module orchestrator/parseOutput
  */

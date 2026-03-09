@@ -6,7 +6,6 @@
 
 import {
   actualStaleness,
-  paginatedScan,
   buildOwnershipTree,
   computeEffectiveStaleness,
   computeStructureHash,
@@ -15,6 +14,7 @@ import {
   globMetas,
   HttpWatcherClient,
   isLocked,
+  paginatedScan,
   readLatestArchive,
   selectCandidate,
   type SynthConfig,
@@ -39,6 +39,21 @@ export function registerSynthTools(api: PluginApi): void {
 
   // Lazy-load config (resolved once on first use)
   let _config: SynthConfig | null = null;
+
+  interface SynthEntity {
+    path: string;
+    depth: number;
+    emphasis: number;
+    stalenessSeconds: number | 'never-synthesized';
+    lastSynthesized: string | null;
+    hasError: boolean;
+    locked: boolean;
+    architectTokens: number | null;
+    builderTokens: number | null;
+    criticTokens: number | null;
+    children: number;
+  }
+
   const getConfig = (): SynthConfig => {
     if (!_config) {
       _config = loadSynthConfig(configPath);
@@ -88,7 +103,9 @@ export function registerSynthTools(api: PluginApi): void {
         const metaPaths = globMetas(watchPaths);
         const tree = buildOwnershipTree(metaPaths);
 
-        const entities = [];
+        const entities: Array<
+          SynthEntity | Record<string, SynthEntity[keyof SynthEntity]>
+        > = [];
         let staleCount = 0;
         let errorCount = 0;
         let lockedCount = 0;
@@ -114,10 +131,20 @@ export function registerSynthTools(api: PluginApi): void {
             const locked = isLocked(node.metaPath.replaceAll('/', '\\'));
             const neverSynth = !meta._generatedAt;
 
-            if (filter.hasError !== undefined && hasErr !== filter.hasError) continue;
-            if (filter.neverSynthesized !== undefined && neverSynth !== filter.neverSynthesized) continue;
-            if (filter.locked !== undefined && locked !== filter.locked) continue;
-            if (typeof filter.staleHours === 'number' && staleness < filter.staleHours * 3600) continue;
+            if (filter.hasError !== undefined && hasErr !== filter.hasError)
+              continue;
+            if (
+              filter.neverSynthesized !== undefined &&
+              neverSynth !== filter.neverSynthesized
+            )
+              continue;
+            if (filter.locked !== undefined && locked !== filter.locked)
+              continue;
+            if (
+              typeof filter.staleHours === 'number' &&
+              staleness < filter.staleHours * 3600
+            )
+              continue;
           }
           const staleness = actualStaleness(meta);
           const locked = isLocked(node.metaPath.replaceAll('/', '\\'));
@@ -150,7 +177,7 @@ export function registerSynthTools(api: PluginApi): void {
           }
 
           const fields = params.fields as string[] | undefined;
-          const raw: Record<string, unknown> = {
+          const raw: SynthEntity = {
             path: node.metaPath,
             depth: meta._depth ?? node.treeDepth,
             emphasis: meta._emphasis ?? 1,
@@ -168,9 +195,10 @@ export function registerSynthTools(api: PluginApi): void {
           };
           // Apply field projection if specified
           if (fields) {
-            const projected: Record<string, unknown> = {};
+            const projected: Record<string, SynthEntity[keyof SynthEntity]> =
+              {};
             for (const f of fields) {
-              if (f in raw) projected[f] = raw[f];
+              if (f in raw) projected[f] = raw[f as keyof SynthEntity];
             }
             entities.push(projected);
           } else {
@@ -194,7 +222,9 @@ export function registerSynthTools(api: PluginApi): void {
             lastSynthesizedPath: lastSynthPath,
             lastSynthesizedAt: lastSynthAt,
           },
-          items: entities.sort((a, b) => String(a.path ?? '').localeCompare(String(b.path ?? ''))),
+          items: entities.sort((a, b) =>
+            String(a.path ?? '').localeCompare(String(b.path ?? '')),
+          ),
         });
       } catch (error) {
         return fail(error);

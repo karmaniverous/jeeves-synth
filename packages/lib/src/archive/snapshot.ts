@@ -1,7 +1,7 @@
 /**
  * Create archive snapshots of meta.json.
  *
- * Copies current meta.json to archive/{ISO-timestamp}.json with
+ * Copies current meta.json to archive/\{ISO-timestamp\}.json with
  * _archived: true and _archivedAt added.
  *
  * @module archive/snapshot

@@ -166,13 +166,3 @@ export async function registerSynthRules(watcherUrl: string): Promise<void> {
   const client = new HttpWatcherClient({ baseUrl: watcherUrl });
   await client.registerRules(SOURCE, SYNTH_RULES);
 }
-
-/**
- * Unregister jeeves-synth virtual rules from the watcher.
- *
- * @param watcherUrl - Base URL for the watcher service.
- */
-export async function unregisterSynthRules(watcherUrl: string): Promise<void> {
-  const client = new HttpWatcherClient({ baseUrl: watcherUrl });
-  await client.unregisterRules(SOURCE);
-}

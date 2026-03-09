@@ -1,5 +1,5 @@
 /**
- * Load and resolve jeeves-synth config with @file: indirection.
+ * Load and resolve jeeves-synth config with \@file: indirection.
  *
  * @module configLoader
  */
@@ -13,9 +13,9 @@ import {
 } from '@karmaniverous/jeeves-synth';
 
 /**
- * Resolve @file: references in a config value.
+ * Resolve \@file: references in a config value.
  *
- * @param value - String value that may start with "@file:".
+ * @param value - String value that may start with "\@file:".
  * @param baseDir - Base directory for resolving relative paths.
  * @returns The resolved string (file contents or original value).
  */
@@ -26,7 +26,7 @@ function resolveFileRef(value: string, baseDir: string): string {
 }
 
 /**
- * Load synth config from a JSON file, resolving @file: references.
+ * Load synth config from a JSON file, resolving \@file: references.
  *
  * @param configPath - Path to jeeves-synth.config.json.
  * @returns Validated SynthConfig with resolved prompt strings.

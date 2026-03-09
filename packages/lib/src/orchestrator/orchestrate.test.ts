@@ -115,7 +115,8 @@ describe('orchestrate', () => {
     mkdirSync(join(testRoot, 'domain/.meta/archive'), { recursive: true });
 
     // Hash must match scope-filtered file list from mock watcher
-    const fullFilePath = testRoot.replaceAll('\\', '/') + '/domain/test-file.md';
+    const fullFilePath =
+      testRoot.replaceAll('\\', '/') + '/domain/test-file.md';
     const fileHash = createHash('sha256').update(fullFilePath).digest('hex');
 
     const metaJson: MetaJson = {
