@@ -23,6 +23,10 @@ export {
 export { computeEma } from './ema.js';
 export { createSynthEngine, type SynthEngine } from './engine.js';
 export { toSynthError } from './errors.js';
+export {
+  GatewayExecutor,
+  type GatewayExecutorOptions,
+} from './executor/index.js';
 export type {
   InferenceRuleSpec,
   ScanFile,

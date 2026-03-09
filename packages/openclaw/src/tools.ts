@@ -504,7 +504,7 @@ export function registerSynthTools(api: PluginApi): void {
     ): Promise<ToolResult> => {
       try {
         const { orchestrate } = await import('@karmaniverous/jeeves-meta');
-        const { GatewayExecutor } = await import('./executor.js');
+        const { GatewayExecutor } = await import('@karmaniverous/jeeves-meta');
 
         // Load config from canonical config file
         const config = getConfig();

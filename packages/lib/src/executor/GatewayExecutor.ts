@@ -1,24 +1,24 @@
 /**
- * SynthExecutor implementation for the OpenClaw plugin.
+ * SynthExecutor implementation using the OpenClaw gateway HTTP API.
  *
- * Uses the OpenClaw gateway HTTP API to spawn sessions and poll
- * for completion. This allows the plugin to run full synthesis
- * cycles from within tool calls.
+ * Lives in the library package so both plugin and runner can import it.
+ * Spawns sub-agent sessions via the gateway, polls for completion,
+ * and extracts output text.
  *
- * @module executor
+ * @module executor/GatewayExecutor
  */
 
 import type {
   SynthExecutor,
   SynthSpawnOptions,
   SynthSpawnResult,
-} from '@karmaniverous/jeeves-meta';
+} from '../interfaces/index.js';
 
 const DEFAULT_POLL_INTERVAL_MS = 5000;
 const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes
 
 /** Options for the GatewayExecutor. */
-interface GatewayExecutorOptions {
+export interface GatewayExecutorOptions {
   /** OpenClaw gateway base URL. Default: http://127.0.0.1:3000 */
   gatewayUrl?: string;
   /** API key for gateway authentication. */
@@ -33,11 +33,11 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * SynthExecutor that spawns OpenClaw sessions via the gateway API.
+ * SynthExecutor that spawns OpenClaw sessions via the gateway HTTP API.
  *
- * Note: This executor is designed for interactive (plugin) use.
- * For scheduled (runner) use, a different executor implementation
- * would call the gateway API from an external process.
+ * Used by both the OpenClaw plugin (in-process tool calls) and the
+ * runner/CLI (external invocation). Constructs from `gatewayUrl` and
+ * optional `apiKey` — typically sourced from `SynthConfig`.
  */
 export class GatewayExecutor implements SynthExecutor {
   private readonly gatewayUrl: string;
@@ -60,7 +60,6 @@ export class GatewayExecutor implements SynthExecutor {
     const timeoutMs = (options?.timeout ?? DEFAULT_TIMEOUT_MS / 1000) * 1000;
     const deadline = Date.now() + timeoutMs;
 
-    // Spawn a sub-agent session
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -120,16 +119,14 @@ export class GatewayExecutor implements SynthExecutor {
         status?: string;
       };
 
-      // Check if session completed
       if (history.status === 'completed' || history.status === 'done') {
-        // Extract the last assistant message as output
         const messages = history.messages ?? [];
         for (let i = messages.length - 1; i >= 0; i--) {
           if (messages[i].role === 'assistant' && messages[i].content) {
             return { output: messages[i].content };
           }
         }
-        return { output: '' }; // Completed but no assistant output
+        return { output: '' };
       }
     }
 
