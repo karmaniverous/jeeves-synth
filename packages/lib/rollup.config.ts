@@ -47,6 +47,7 @@ const buildCli: RollupOptions = {
     typescriptPlugin({
       tsconfig: './tsconfig.json',
       outputToFilesystem: false,
+      outDir: 'dist',
       include: ['src/**/*.ts'],
       exclude: ['**/*.test.ts'],
       noEmit: false,

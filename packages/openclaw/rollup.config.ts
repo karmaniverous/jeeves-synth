@@ -37,6 +37,7 @@ const cliConfig: RollupOptions = {
     typescriptPlugin({
       tsconfig: './tsconfig.json',
       outputToFilesystem: false,
+      outDir: 'dist',
       noEmit: false,
       declaration: false,
       incremental: false,
