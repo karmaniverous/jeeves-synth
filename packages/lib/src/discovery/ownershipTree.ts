@@ -8,14 +8,10 @@
  * @module discovery/ownershipTree
  */
 
-import { dirname, relative, sep } from 'node:path';
+import { dirname, relative } from 'node:path';
 
+import { normalizePath } from '../normalizePath.js';
 import type { MetaNode, OwnershipTree } from './types.js';
-
-/** Normalize path separators to forward slashes for consistent comparison. */
-function normalizePath(p: string): string {
-  return p.split(sep).join('/');
-}
 
 /**
  * Build an ownership tree from an array of .meta/ directory paths.
