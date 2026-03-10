@@ -22,7 +22,7 @@ export default function register(api: PluginApi): void {
   const config = loadSynthConfig(getConfigPath(api));
 
   // Register virtual rules with watcher (fire-and-forget at startup)
-  registerSynthRules(config.watcherUrl).catch((err: unknown) => {
+  registerSynthRules(config.watcherUrl, config).catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[jeeves-meta] Failed to register virtual rules:', message);
   });

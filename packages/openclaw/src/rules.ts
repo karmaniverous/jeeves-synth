@@ -11,10 +11,18 @@
 
 import { HttpWatcherClient } from '@karmaniverous/jeeves-meta';
 
+import type { SynthConfig } from '@karmaniverous/jeeves-meta';
+
 const SOURCE = 'jeeves-meta';
 
-/** Virtual rule definitions per spec Section 15. */
-const SYNTH_RULES = [
+/**
+ * Build virtual rule definitions using configured domain tags.
+ *
+ * @param config - Synth config with metaProperty/metaArchiveProperty.
+ * @returns Array of inference rule specs.
+ */
+function buildSynthRules(config: SynthConfig) {
+  return [
   {
     name: 'synth-meta-live',
     description: 'Live jeeves-meta .meta/meta.json files',
@@ -31,7 +39,7 @@ const SYNTH_RULES = [
       'base',
       {
         properties: {
-          domains: { set: ['synth-meta'] },
+          domains: { set: config.metaProperty.domains },
           synth_id: { type: 'string', set: '{{json._id}}' },
           synth_steer: { type: 'string', set: '{{json._steer}}' },
           synth_depth: { type: 'number', set: '{{json._depth}}' },
@@ -110,7 +118,7 @@ const SYNTH_RULES = [
       'base',
       {
         properties: {
-          domains: { set: ['synth-archive'] },
+          domains: { set: config.metaArchiveProperty.domains },
           synth_id: { type: 'string', set: '{{json._id}}' },
           archived: { type: 'boolean', set: 'true' },
           archived_at: { type: 'string', set: '{{json._archivedAt}}' },
@@ -175,7 +183,8 @@ const SYNTH_RULES = [
     },
     renderAs: 'md',
   },
-];
+  ];
+}
 
 /**
  * Register jeeves-meta virtual rules with the watcher.
@@ -185,7 +194,10 @@ const SYNTH_RULES = [
  *
  * @param watcherUrl - Base URL for the watcher service.
  */
-export async function registerSynthRules(watcherUrl: string): Promise<void> {
+export async function registerSynthRules(
+  watcherUrl: string,
+  config: SynthConfig,
+): Promise<void> {
   const client = new HttpWatcherClient({ baseUrl: watcherUrl });
-  await client.registerRules(SOURCE, SYNTH_RULES);
+  await client.registerRules(SOURCE, buildSynthRules(config));
 }
