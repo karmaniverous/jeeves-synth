@@ -130,7 +130,11 @@ async function orchestrateOnce(
     }
   }
 
-  const tree = buildOwnershipTree(metaPaths);
+  // Only build tree from paths with readable meta.json (excludes orphaned/deleted entries)
+  const validPaths = metaPaths.filter((mp) => metas.has(normalizePath(mp)));
+  if (validPaths.length === 0) return { synthesized: false };
+
+  const tree = buildOwnershipTree(validPaths);
 
   // If targetPath specified, skip candidate selection — go directly to that meta
   let targetNode: MetaNode | undefined;
