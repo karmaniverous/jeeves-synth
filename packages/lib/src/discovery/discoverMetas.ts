@@ -59,7 +59,7 @@ export function buildMetaFilter(config: SynthConfig): Record<string, unknown> {
 
   must.push({
     key: 'file_path',
-    match: { text: 'meta.json' },
+    match: { text: '.meta/meta.json' },
   });
 
   return { must };

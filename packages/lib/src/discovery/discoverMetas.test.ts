@@ -39,7 +39,7 @@ describe('buildMetaFilter', () => {
     expect(filter).toEqual({
       must: [
         { key: 'domains', match: { value: 'meta' } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -53,7 +53,7 @@ describe('buildMetaFilter', () => {
     expect(filter).toEqual({
       must: [
         { key: 'domains', match: { value: 'synth-meta' } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -67,7 +67,7 @@ describe('buildMetaFilter', () => {
     expect(filter).toEqual({
       must: [
         { key: '_meta', match: { value: 'current' } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -81,7 +81,7 @@ describe('buildMetaFilter', () => {
     expect(filter).toEqual({
       must: [
         { key: '_meta', match: { value: 'current' } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -95,7 +95,7 @@ describe('buildMetaFilter', () => {
     expect(filter).toEqual({
       must: [
         { key: '_meta', match: { value: 'current' } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -109,7 +109,7 @@ describe('buildMetaFilter', () => {
     expect(filter).toEqual({
       must: [
         { key: 'active', match: { value: true } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -123,7 +123,7 @@ describe('buildMetaFilter', () => {
     expect(filter).toEqual({
       must: [
         { key: 'priority', match: { value: 5 } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -165,7 +165,7 @@ describe('discoverMetas', () => {
         filter: {
           must: [
             { key: 'domains', match: { value: 'meta' } },
-            { key: 'file_path', match: { text: 'meta.json' } },
+            { key: 'file_path', match: { text: '.meta/meta.json' } },
           ],
         },
       }),
