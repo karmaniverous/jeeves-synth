@@ -71,6 +71,62 @@ describe('buildMetaFilter', () => {
       ],
     });
   });
+
+  it('skips non-filterable object values', () => {
+    const nested = {
+      ...config,
+      metaProperty: { _meta: 'current', nested: { foo: 'bar' } },
+    } as unknown as SynthConfig;
+    const filter = buildMetaFilter(nested);
+    expect(filter).toEqual({
+      must: [
+        { key: '_meta', match: { value: 'current' } },
+        { key: 'file_path', match: { text: 'meta.json' } },
+      ],
+    });
+  });
+
+  it('skips empty array values', () => {
+    const empty = {
+      ...config,
+      metaProperty: { _meta: 'current', tags: [] },
+    } as unknown as SynthConfig;
+    const filter = buildMetaFilter(empty);
+    expect(filter).toEqual({
+      must: [
+        { key: '_meta', match: { value: 'current' } },
+        { key: 'file_path', match: { text: 'meta.json' } },
+      ],
+    });
+  });
+
+  it('handles boolean values', () => {
+    const bool = {
+      ...config,
+      metaProperty: { active: true },
+    } as unknown as SynthConfig;
+    const filter = buildMetaFilter(bool);
+    expect(filter).toEqual({
+      must: [
+        { key: 'active', match: { value: true } },
+        { key: 'file_path', match: { text: 'meta.json' } },
+      ],
+    });
+  });
+
+  it('handles numeric values', () => {
+    const num = {
+      ...config,
+      metaProperty: { priority: 5 },
+    } as unknown as SynthConfig;
+    const filter = buildMetaFilter(num);
+    expect(filter).toEqual({
+      must: [
+        { key: 'priority', match: { value: 5 } },
+        { key: 'file_path', match: { text: 'meta.json' } },
+      ],
+    });
+  });
 });
 
 describe('discoverMetas', () => {
