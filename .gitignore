@@ -19,3 +19,4 @@ context/
 .stan/imports/
 
 docs/
+*.tgz

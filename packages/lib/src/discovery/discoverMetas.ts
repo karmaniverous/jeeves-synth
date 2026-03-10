@@ -25,6 +25,10 @@ export function buildMetaFilter(config: SynthConfig): Record<string, unknown> {
         key: 'domains',
         match: { value: config.metaProperty.domains[0] },
       },
+      {
+        key: 'file_path',
+        match: { text: 'meta.json' },
+      },
     ],
   };
 }
@@ -50,17 +54,16 @@ export async function discoverMetas(
     fields: ['file_path'],
   });
 
-  // Deduplicate by file_path (multi-chunk files)
+  // Deduplicate by .meta/ directory path (handles multi-chunk files)
   const seen = new Set<string>();
   const metaPaths: string[] = [];
 
   for (const sf of scanFiles) {
     const fp = normalizePath(sf.file_path);
-    if (seen.has(fp)) continue;
-    seen.add(fp);
-
     // Derive .meta/ directory from file_path (strip /meta.json)
     const metaPath = fp.replace(/\/meta\.json$/, '');
+    if (seen.has(metaPath)) continue;
+    seen.add(metaPath);
     metaPaths.push(metaPath);
   }
 

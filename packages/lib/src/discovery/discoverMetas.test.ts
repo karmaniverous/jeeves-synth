@@ -37,7 +37,10 @@ describe('buildMetaFilter', () => {
   it('builds filter from first domain in metaProperty', () => {
     const filter = buildMetaFilter(config);
     expect(filter).toEqual({
-      must: [{ key: 'domains', match: { value: 'meta' } }],
+      must: [
+        { key: 'domains', match: { value: 'meta' } },
+        { key: 'file_path', match: { text: 'meta.json' } },
+      ],
     });
   });
 
@@ -48,7 +51,10 @@ describe('buildMetaFilter', () => {
     } as SynthConfig;
     const filter = buildMetaFilter(custom);
     expect(filter).toEqual({
-      must: [{ key: 'domains', match: { value: 'synth-meta' } }],
+      must: [
+        { key: 'domains', match: { value: 'synth-meta' } },
+        { key: 'file_path', match: { text: 'meta.json' } },
+      ],
     });
   });
 });
@@ -86,7 +92,12 @@ describe('discoverMetas', () => {
     await discoverMetas(config, watcher);
     expect(scan).toHaveBeenCalledWith(
       expect.objectContaining({
-        filter: { must: [{ key: 'domains', match: { value: 'meta' } }] },
+        filter: {
+          must: [
+            { key: 'domains', match: { value: 'meta' } },
+            { key: 'file_path', match: { text: 'meta.json' } },
+          ],
+        },
       }),
     );
   });
