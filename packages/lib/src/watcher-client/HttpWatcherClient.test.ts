@@ -44,7 +44,11 @@ describe('HttpWatcherClient.scan', () => {
     expect(mockFetch).toHaveBeenCalledOnce();
     const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('http://localhost:1936/scan');
-    expect(JSON.parse(init.body as string)).toEqual({ pathPrefix: '/test' });
+    expect(JSON.parse(init.body as string)).toEqual({
+      filter: {
+        must: [{ key: 'file_path', match: { text: '/test' } }],
+      },
+    });
     expect(result.files).toHaveLength(1);
     expect(result.files[0].file_path).toBe('/test/a.md');
   });
@@ -64,8 +68,12 @@ describe('HttpWatcherClient.scan', () => {
       (mockFetch.mock.calls[0] as [string, RequestInit])[1].body as string,
     ) as Record<string, unknown>;
     expect(body).toEqual({
-      pathPrefix: '/test',
-      modifiedAfter: 500,
+      filter: {
+        must: [
+          { key: 'file_path', match: { text: '/test' } },
+          { key: 'modified_at', range: { gt: 500 } },
+        ],
+      },
       fields: ['file_path'],
       limit: 10,
       cursor: 'abc',

@@ -91,16 +91,36 @@ export class HttpWatcherClient implements WatcherClient {
   }
 
   async scan(params: ScanParams): Promise<ScanResponse> {
-    const body: Record<string, unknown> = {};
+    // Build Qdrant filter: merge explicit filter with pathPrefix/modifiedAfter
+    const mustClauses: Record<string, unknown>[] = [];
+
+    // Carry over any existing 'must' clauses from the provided filter
+    if (params.filter) {
+      const existing = params.filter.must;
+      if (Array.isArray(existing)) {
+        mustClauses.push(...(existing as Record<string, unknown>[]));
+      }
+    }
+
+    // Translate pathPrefix into a Qdrant text match on file_path
     if (params.pathPrefix !== undefined) {
-      body.pathPrefix = params.pathPrefix;
+      mustClauses.push({
+        key: 'file_path',
+        match: { text: params.pathPrefix },
+      });
     }
-    if (params.filter !== undefined) {
-      body.filter = params.filter;
-    }
+
+    // Translate modifiedAfter into a Qdrant range filter on modified_at
     if (params.modifiedAfter !== undefined) {
-      body.modifiedAfter = params.modifiedAfter;
+      mustClauses.push({
+        key: 'modified_at',
+        range: { gt: params.modifiedAfter },
+      });
     }
+
+    const filter: Record<string, unknown> = { must: mustClauses };
+
+    const body: Record<string, unknown> = { filter };
     if (params.fields !== undefined) {
       body.fields = params.fields;
     }
