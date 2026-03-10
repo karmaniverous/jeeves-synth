@@ -588,16 +588,13 @@ export function registerSynthTools(api: PluginApi): void {
         });
         const watcher = new HttpWatcherClient({ baseUrl: getWatcherUrl() });
 
-        // If path specified, temporarily override watchPaths to target it
         const targetPath = params.path as string | undefined;
-        const effectiveConfig = targetPath
-          ? {
-              ...config,
-              watchPaths: [targetPath.replace(/[/\\]\.meta[/\\]?$/, '')],
-            }
-          : config;
-
-        const results = await orchestrate(effectiveConfig, executor, watcher);
+        const results = await orchestrate(
+          config,
+          executor,
+          watcher,
+          targetPath,
+        );
         const synthesized = results.filter((r) => r.synthesized);
 
         if (synthesized.length === 0) {

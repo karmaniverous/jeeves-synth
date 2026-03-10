@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { synthConfigSchema } from './config.js';
 
 const validConfig = {
-  watchPaths: ['j:/domains'],
   watcherUrl: 'http://localhost:3456',
   defaultArchitect: 'You are the architect...',
   defaultCritic: 'You are the critic...',
@@ -39,14 +38,6 @@ describe('synthConfigSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('rejects empty watchPaths', () => {
-    const result = synthConfigSchema.safeParse({
-      ...validConfig,
-      watchPaths: [],
-    });
-    expect(result.success).toBe(false);
-  });
-
   it('rejects invalid watcherUrl', () => {
     const result = synthConfigSchema.safeParse({
       ...validConfig,
@@ -57,7 +48,6 @@ describe('synthConfigSchema', () => {
 
   it('rejects missing defaultArchitect', () => {
     const partial = {
-      watchPaths: validConfig.watchPaths,
       watcherUrl: validConfig.watcherUrl,
       defaultCritic: validConfig.defaultCritic,
     };

@@ -16,8 +16,9 @@ import {
   readLatestArchive,
 } from '../archive/index.js';
 import { discoverMetas } from '../discovery/discoverMetas.js';
-import { buildOwnershipTree } from '../discovery/index.js';
+import { buildOwnershipTree, findNode } from '../discovery/index.js';
 import { filterInScope, getScopePrefix } from '../discovery/scope.js';
+import type { MetaNode } from '../discovery/types.js';
 import { toSynthError } from '../errors.js';
 import type { SynthExecutor, WatcherClient } from '../interfaces/index.js';
 import { acquireLock, releaseLock } from '../lock.js';
@@ -108,6 +109,7 @@ async function orchestrateOnce(
   config: SynthConfig,
   executor: SynthExecutor,
   watcher: WatcherClient,
+  targetPath?: string,
 ): Promise<OrchestrateResult> {
   // Step 1: Discover via watcher scan
   const metaPaths = await discoverMetas(config, watcher);
@@ -129,6 +131,14 @@ async function orchestrateOnce(
   }
 
   const tree = buildOwnershipTree(metaPaths);
+
+  // If targetPath specified, skip candidate selection — go directly to that meta
+  let targetNode: MetaNode | undefined;
+  if (targetPath) {
+    const normalized = normalizePath(targetPath);
+    targetNode = findNode(tree, normalized) ?? undefined;
+    if (!targetNode) return { synthesized: false };
+  }
 
   // Steps 3-4: Staleness check + candidate selection
   const candidates = [];
@@ -177,8 +187,13 @@ async function orchestrateOnce(
     break;
   }
 
-  if (!winner) return { synthesized: false };
-  const { node } = winner;
+  if (!winner && !targetNode) return { synthesized: false };
+  const node = targetNode ?? winner!.node;
+
+  // For targeted path, acquire lock now (candidate selection already locked for stalest)
+  if (targetNode && !acquireLock(node.metaPath)) {
+    return { synthesized: false };
+  }
 
   try {
     // Re-read meta after lock (may have changed)
@@ -336,17 +351,19 @@ async function orchestrateOnce(
  * @param config - Validated synthesis config.
  * @param executor - Pluggable LLM executor.
  * @param watcher - Watcher HTTP client.
+ * @param targetPath - Optional: specific meta/owner path to synthesize instead of stalest candidate.
  * @returns Array of results, one per cycle attempted.
  */
 export async function orchestrate(
   config: SynthConfig,
   executor: SynthExecutor,
   watcher: WatcherClient,
+  targetPath?: string,
 ): Promise<OrchestrateResult[]> {
   const results: OrchestrateResult[] = [];
 
   for (let i = 0; i < config.batchSize; i++) {
-    const result = await orchestrateOnce(config, executor, watcher);
+    const result = await orchestrateOnce(config, executor, watcher, targetPath);
     results.push(result);
     if (!result.synthesized) break; // No more candidates
   }

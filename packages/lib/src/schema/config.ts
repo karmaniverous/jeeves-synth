@@ -12,7 +12,6 @@ import { z } from 'zod';
 /** Zod schema for jeeves-meta configuration. */
 export const synthConfigSchema = z.object({
   /** Filesystem paths to watch for .meta/ directories. */
-  watchPaths: z.array(z.string()).min(1),
 
   /** Watcher service base URL. */
   watcherUrl: z.url(),

@@ -284,9 +284,6 @@ async function runSynthesize(config: SynthConfig): Promise<void> {
 
   const effectiveConfig = {
     ...config,
-    ...(targetPath
-      ? { watchPaths: [targetPath.replace(/[/\\]\.meta[/\\]?$/, '')] }
-      : {}),
     ...(batchArg ? { batchSize: parseInt(batchArg, 10) } : {}),
   };
 
@@ -296,7 +293,12 @@ async function runSynthesize(config: SynthConfig): Promise<void> {
   });
   const watcher = new HttpWatcherClient({ baseUrl: config.watcherUrl });
 
-  const results = await orchestrate(effectiveConfig, executor, watcher);
+  const results = await orchestrate(
+    effectiveConfig,
+    executor,
+    watcher,
+    targetPath ?? undefined,
+  );
   const synthesized = results.filter((r) => r.synthesized);
 
   output({

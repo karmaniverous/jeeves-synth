@@ -15,12 +15,10 @@ export {
   buildMetaFilter,
   buildOwnershipTree,
   discoverMetas,
-  ensureMetaJson,
   filterInScope,
   findNode,
   getScopeExclusions,
   getScopePrefix,
-  globMetas,
   type MetaNode,
   type OwnershipTree,
 } from './discovery/index.js';
