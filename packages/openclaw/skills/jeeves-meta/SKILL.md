@@ -33,6 +33,10 @@ architect trigger reasons, steer status, and structure changes — without
 running any LLM calls. Use before `synth_trigger` to understand what
 will happen.
 
+**Parameters:**
+- `path` (optional): Specific `.meta/` or owner directory path. If omitted,
+  previews the stalest candidate.
+
 ### synth_trigger
 Manually trigger a full synthesis cycle (architect → builder → critic) for
 a specific meta or the next-stalest candidate.
