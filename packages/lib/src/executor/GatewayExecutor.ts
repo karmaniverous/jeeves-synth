@@ -123,7 +123,7 @@ export class GatewayExecutor implements MetaExecutor {
       task,
       label: options?.label ?? 'jeeves-meta-synthesis',
       runTimeoutSeconds: timeoutSeconds,
-      thinking: options?.thinking ?? 'low',
+      ...(options?.thinking ? { thinking: options.thinking } : {}),
       ...(options?.model ? { model: options.model } : {}),
     });
 

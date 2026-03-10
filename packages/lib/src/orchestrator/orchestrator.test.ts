@@ -30,6 +30,7 @@ const sampleConfig: MetaConfig = {
   architectTimeout: 120,
   builderTimeout: 600,
   criticTimeout: 300,
+  thinking: 'low',
   defaultArchitect: 'You are an architect. Analyze the data shape.',
   defaultCritic: 'You are a critic. Evaluate the synthesis.',
   skipUnchanged: true,

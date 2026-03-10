@@ -43,6 +43,9 @@ export const metaConfigSchema = z.object({
   /** Critic subprocess timeout in seconds. */
   criticTimeout: z.number().int().min(30).default(300),
 
+  /** Thinking level for spawned synthesis sessions (e.g. "low", "medium", "high"). */
+  thinking: z.string().default('low'),
+
   /** Resolved architect system prompt text. */
   defaultArchitect: z.string(),
 

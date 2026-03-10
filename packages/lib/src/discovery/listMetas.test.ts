@@ -25,6 +25,7 @@ function makeConfig(overrides: Partial<MetaConfig> = {}): MetaConfig {
     architectTimeout: 60000,
     builderTimeout: 60000,
     criticTimeout: 60000,
+    thinking: 'low',
     batchSize: 1,
     maxLines: 500,
     maxArchive: 10,

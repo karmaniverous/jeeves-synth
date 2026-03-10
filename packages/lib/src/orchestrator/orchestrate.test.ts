@@ -25,6 +25,7 @@ const config: MetaConfig = {
   architectTimeout: 120,
   builderTimeout: 600,
   criticTimeout: 300,
+  thinking: 'low',
   defaultArchitect: 'You are the architect.',
   defaultCritic: 'You are the critic.',
   skipUnchanged: true,

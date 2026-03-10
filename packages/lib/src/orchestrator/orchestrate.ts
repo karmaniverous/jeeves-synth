@@ -251,6 +251,7 @@ async function orchestrateOnce(
       try {
         const architectTask = buildArchitectTask(ctx, currentMeta, config);
         const architectResult = await executor.spawn(architectTask, {
+          thinking: config.thinking,
           timeout: config.architectTimeout,
         });
         builderBrief = parseArchitectOutput(architectResult.output);
@@ -291,6 +292,7 @@ async function orchestrateOnce(
     try {
       const builderTask = buildBuilderTask(ctx, metaForBuilder, config);
       const builderResult = await executor.spawn(builderTask, {
+        thinking: config.thinking,
         timeout: config.builderTimeout,
       });
       builderOutput = parseBuilderOutput(builderResult.output);
@@ -310,6 +312,7 @@ async function orchestrateOnce(
     try {
       const criticTask = buildCriticTask(ctx, metaForCritic, config);
       const criticResult = await executor.spawn(criticTask, {
+        thinking: config.thinking,
         timeout: config.criticTimeout,
       });
       feedback = parseCriticOutput(criticResult.output);
