@@ -143,7 +143,8 @@ async function orchestrateOnce(
   // Steps 3-4: Staleness check + candidate selection
   const candidates = [];
   for (const node of tree.nodes.values()) {
-    const meta = metas.get(node.metaPath)!;
+    const meta = metas.get(node.metaPath);
+    if (!meta) continue; // Node not in metas map (e.g. unreadable meta.json)
     const staleness = actualStaleness(meta);
     if (staleness > 0) {
       candidates.push({ node, meta, actualStaleness: staleness });

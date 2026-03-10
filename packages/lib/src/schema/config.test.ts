@@ -73,27 +73,26 @@ describe('synthConfigSchema', () => {
   it('applies default metaProperty and metaArchiveProperty', () => {
     const result = synthConfigSchema.safeParse(validConfig);
     expect(result.success).toBe(true);
-    expect(result.data?.metaProperty).toEqual({ domains: ['meta'] });
-    expect(result.data?.metaArchiveProperty).toEqual({
-      domains: ['meta-archive'],
-    });
+    expect(result.data?.metaProperty).toEqual({ _meta: 'current' });
+    expect(result.data?.metaArchiveProperty).toEqual({ _meta: 'archive' });
   });
 
-  it('accepts custom metaProperty domains', () => {
+  it('accepts custom metaProperty with domains array', () => {
     const result = synthConfigSchema.safeParse({
       ...validConfig,
-      metaProperty: { domains: ['synth-meta'] },
-      metaArchiveProperty: { domains: ['synth-archive'] },
+      metaProperty: { domains: ['meta'] },
+      metaArchiveProperty: { domains: ['meta-archive'] },
     });
     expect(result.success).toBe(true);
-    expect(result.data?.metaProperty).toEqual({ domains: ['synth-meta'] });
+    expect(result.data?.metaProperty).toEqual({ domains: ['meta'] });
   });
 
-  it('rejects metaProperty with empty domains', () => {
+  it('accepts arbitrary metaProperty shape', () => {
     const result = synthConfigSchema.safeParse({
       ...validConfig,
-      metaProperty: { domains: [] },
+      metaProperty: { foo: { bar: ['baz'] } },
     });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
+    expect(result.data?.metaProperty).toEqual({ foo: { bar: ['baz'] } });
   });
 });

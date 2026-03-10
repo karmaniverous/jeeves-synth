@@ -60,21 +60,21 @@ export const synthConfigSchema = z.object({
   batchSize: z.number().int().min(1).default(1),
 
   /**
-   * Watcher metadata properties for live .meta/meta.json files.
-   * Virtual rules use these to tag live metas; scan queries derive
-   * their filter from the first domain value.
+   * Watcher metadata properties applied to live .meta/meta.json files.
+   * Virtual rules set these on every indexed live meta point.
+   * Discovery filter is derived from these properties.
+   * Default: `\{ _meta: "current" \}`
    */
-  metaProperty: z
-    .object({ domains: z.array(z.string()).min(1) })
-    .default({ domains: ['meta'] }),
+  metaProperty: z.record(z.string(), z.unknown()).default({ _meta: 'current' }),
 
   /**
-   * Watcher metadata properties for .meta/archive/** snapshots.
-   * Virtual rules use these to tag archive files.
+   * Watcher metadata properties applied to .meta/archive/** snapshots.
+   * Virtual rules set these on every indexed archive point.
+   * Default: `\{ _meta: "archive" \}`
    */
   metaArchiveProperty: z
-    .object({ domains: z.array(z.string()).min(1) })
-    .default({ domains: ['meta-archive'] }),
+    .record(z.string(), z.unknown())
+    .default({ _meta: 'archive' }),
 });
 
 /** Inferred type for jeeves-meta configuration. */
