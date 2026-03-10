@@ -50,9 +50,9 @@ export function registerMetaTools(api: PluginApi): void {
   /** Create a watcher client. */
   const getWatcher = () => new HttpWatcherClient({ baseUrl: getWatcherUrl() });
 
-  // ─── synth_list ──────────────────────────────────────────────
+  // ─── meta_list ──────────────────────────────────────────────
   api.registerTool({
-    name: 'synth_list',
+    name: 'meta_list',
     description:
       'List metas with summary stats and per-meta projection. Replaces meta_status + meta_entities.',
     parameters: {
@@ -219,9 +219,9 @@ export function registerMetaTools(api: PluginApi): void {
     },
   });
 
-  // ─── synth_detail ────────────────────────────────────────────
+  // ─── meta_detail ────────────────────────────────────────────
   api.registerTool({
-    name: 'synth_detail',
+    name: 'meta_detail',
     description:
       'Full detail for a single meta, with optional archive history.',
     parameters: {
@@ -331,9 +331,9 @@ export function registerMetaTools(api: PluginApi): void {
     },
   });
 
-  // ─── synth_preview ────────────────────────────────────────────
+  // ─── meta_preview ────────────────────────────────────────────
   api.registerTool({
-    name: 'synth_preview',
+    name: 'meta_preview',
     description:
       'Dry-run: show what inputs would be gathered for the next synthesis cycle without running LLM.',
     parameters: {
@@ -470,9 +470,9 @@ export function registerMetaTools(api: PluginApi): void {
     },
   });
 
-  // ─── synth_trigger ────────────────────────────────────────────
+  // ─── meta_trigger ────────────────────────────────────────────
   api.registerTool({
-    name: 'synth_trigger',
+    name: 'meta_trigger',
     description:
       'Manually trigger synthesis for a specific meta or the next-stalest candidate. Runs the full 3-step cycle (architect, builder, critic).',
     parameters: {
