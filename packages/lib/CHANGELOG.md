@@ -2,8 +2,9 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
-#### 0.3.0
+#### 0.3.1
 
+- Consolidate meta listing/dedup in lib [`#20`](https://github.com/karmaniverous/jeeves-meta/pull/20)
 - Phase 7e: Standardize meta discovery on watcher scan [`#19`](https://github.com/karmaniverous/jeeves-meta/pull/19)
 - fix: map watcher scan response shape [`#18`](https://github.com/karmaniverous/jeeves-meta/pull/18)
 - fix: SKILL.md bootstrap + duplicate shebang [`#17`](https://github.com/karmaniverous/jeeves-meta/pull/17)
@@ -26,6 +27,7 @@ All notable changes to this project will be documented in this file. Dates are d
 - chore: scaffold monorepo from jeeves-watcher template [`551f4c3`](https://github.com/karmaniverous/jeeves-meta/commit/551f4c36499d8cee1cb499bef1447a735afaca9a)
 - docs: add TypeDoc setup, READMEs, guides, and PlantUML diagrams [`bb41d88`](https://github.com/karmaniverous/jeeves-meta/commit/bb41d88ade5e639aebe47dbce9ddd4a7ffe7f429)
 - feat: Phase 5 - orchestrator (13-step synthesis cycle) [`1550425`](https://github.com/karmaniverous/jeeves-meta/commit/155042519009209432d7a2ca282c53e75221937c)
+- fix: consolidate meta listing + dedupe in lib [`37939e5`](https://github.com/karmaniverous/jeeves-meta/commit/37939e55f00f344901b28080f4243e27f2665b70)
 - refactor: SOLID/DRY pass and test coverage [`5c52911`](https://github.com/karmaniverous/jeeves-meta/commit/5c52911f76d9576ce2976149a2b17d2f8ec2a6a2)
 - feat: Phase 1 - schemas and interfaces [`e6a1ad5`](https://github.com/karmaniverous/jeeves-meta/commit/e6a1ad5d8d9f8c4a8a6f82be6c1c304496036168)
 - implement dev plan gaps: token tracking, tool refactor, scope condensation [`586eb22`](https://github.com/karmaniverous/jeeves-meta/commit/586eb22769e722dddd340d4feb88fba0809487ac)
@@ -36,6 +38,7 @@ All notable changes to this project will be documented in this file. Dates are d
 - feat: Phase 7 - OpenClaw plugin with synth tools [`235559d`](https://github.com/karmaniverous/jeeves-meta/commit/235559d7584b2e42f73c7a8e1eac7eb95ba57b89)
 - feat: virtual rules + synth_trigger + GatewayExecutor [`6cd2aa4`](https://github.com/karmaniverous/jeeves-meta/commit/6cd2aa46aa0c11cbdf4651908b9997e2195a67f4)
 - refactor: add targetPath to orchestrate, remove globMetas/ensureMetaJson/watchPaths [`5c15fe0`](https://github.com/karmaniverous/jeeves-meta/commit/5c15fe07b5f051eb67023cf30398820217c02f90)
+- fix: translate pathPrefix/modifiedAfter to Qdrant filter in HttpWatcherClient; add listMetas tests [`fcfa6fe`](https://github.com/karmaniverous/jeeves-meta/commit/fcfa6fe5e44ee92a3a726c30fb7bc70a13256cd2)
 - feat: Phase 3 - scheduling and staleness [`c299fe4`](https://github.com/karmaniverous/jeeves-meta/commit/c299fe463ac78e68b8ebb6a951d1836350cc5170)
 - feat: Phase 6 - HttpWatcherClient implementation [`917388f`](https://github.com/karmaniverous/jeeves-meta/commit/917388f01d03f846c77b1013592d6e9100bc0ae5)
 - resolve spec-vs-implementation gaps [`b1e177b`](https://github.com/karmaniverous/jeeves-meta/commit/b1e177b892d07d15374b623cfdfcb73536ded3c3)
@@ -61,9 +64,11 @@ All notable changes to this project will be documented in this file. Dates are d
 - added env.local.template [`4d0ebcc`](https://github.com/karmaniverous/jeeves-meta/commit/4d0ebcc82c8290a9bc283f8227b726888dfd3ec7)
 - docs: resolve all typedoc warnings [`e340852`](https://github.com/karmaniverous/jeeves-meta/commit/e3408521be8c29691ec4fb807587c7430f689a89)
 - chore: release @karmaniverous/jeeves-meta v0.2.0 [`f14c168`](https://github.com/karmaniverous/jeeves-meta/commit/f14c16829e7c073d4a9fba70947b96405c2be457)
+- chore: release @karmaniverous/jeeves-meta-openclaw v0.1.2 [`9df0f27`](https://github.com/karmaniverous/jeeves-meta/commit/9df0f2736d30fe29ac8a3da5102461f8564a13f6)
 - fix: map watcher scan response (points/cursor to files/next) [`9319a9c`](https://github.com/karmaniverous/jeeves-meta/commit/9319a9c4da4ef5b2c5fdb50094b2b3da8c0a717e)
 - revert: undo schema extraction, keep docs fixes [`8ef3342`](https://github.com/karmaniverous/jeeves-meta/commit/8ef33420c6995601c9b4c8e714b0f7c9df8adba5)
 - installed dotenvx [`d3c437b`](https://github.com/karmaniverous/jeeves-meta/commit/d3c437bcbd4504b1a0d3ef85492d783c892e42e0)
+- chore: release @karmaniverous/jeeves-meta v0.3.0 [`e15e4ce`](https://github.com/karmaniverous/jeeves-meta/commit/e15e4ce82c3cfc1ed82dffe1079ea97a006ec8f7)
 - chore: release @karmaniverous/jeeves-meta-openclaw v0.1.1 [`cfe1e03`](https://github.com/karmaniverous/jeeves-meta/commit/cfe1e03dbe0d32e2f2f77164ae26166a646574d1)
 - chore: release @karmaniverous/jeeves-meta v0.2.2 [`2d2d181`](https://github.com/karmaniverous/jeeves-meta/commit/2d2d181d5ab63e68f2c7c805229165cf09f3df96)
 - chore: release @karmaniverous/jeeves-meta v0.2.1 [`17bbb31`](https://github.com/karmaniverous/jeeves-meta/commit/17bbb3117b09504d2589cd1f6e785dfe431c219f)
