@@ -17,7 +17,7 @@ export const metaConfigSchema = z.object({
   watcherUrl: z.url(),
 
   /** OpenClaw gateway base URL for subprocess spawning. */
-  gatewayUrl: z.url().default('http://127.0.0.1:3000'),
+  gatewayUrl: z.url().default('http://127.0.0.1:18789'),
 
   /** Optional API key for gateway authentication. */
   gatewayApiKey: z.string().optional(),

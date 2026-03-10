@@ -10,6 +10,10 @@ export interface MetaSpawnOptions {
   model?: string;
   /** Timeout in seconds. */
   timeout?: number;
+  /** Label for the spawned session. */
+  label?: string;
+  /** Thinking level (e.g. "low", "medium", "high"). */
+  thinking?: string;
 }
 
 /** Result of a spawn call, including optional token usage. */
