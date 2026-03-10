@@ -101,7 +101,10 @@ async function refreshToolsMd(
   api: PluginApi,
   config: SynthConfig,
 ): Promise<boolean> {
-  const menu = await generateMetaMenu(config.watcherUrl, buildMetaFilter(config));
+  const menu = await generateMetaMenu(
+    config.watcherUrl,
+    buildMetaFilter(config),
+  );
 
   if (menu === lastWrittenMenu) {
     return false;

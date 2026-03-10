@@ -119,7 +119,8 @@ describe('orchestrate', () => {
     );
 
     const scopeFiles = [testRoot.replaceAll('\\', '/') + '/domain/data.md'];
-    const metaJsonPath = testRoot.replaceAll('\\', '/') + '/domain/.meta/meta.json';
+    const metaJsonPath =
+      testRoot.replaceAll('\\', '/') + '/domain/.meta/meta.json';
     const watcher = createMockWatcher(scopeFiles, [metaJsonPath]);
     const executor = createMockExecutor();
     const spawnSpy = vi.spyOn(executor, 'spawn');
@@ -169,7 +170,8 @@ describe('orchestrate', () => {
     );
 
     // Need at least one file so isStale returns true (full paths for filterInScope)
-    const metaJsonPath = testRoot.replaceAll('\\', '/') + '/domain/.meta/meta.json';
+    const metaJsonPath =
+      testRoot.replaceAll('\\', '/') + '/domain/.meta/meta.json';
     const watcher = createMockWatcher([fullFilePath], [metaJsonPath]);
     const executor = createMockExecutor();
     const spawnSpy = vi.spyOn(executor, 'spawn');
@@ -188,7 +190,8 @@ describe('orchestrate', () => {
       JSON.stringify({ _id: '550e8400-e29b-41d4-a716-446655440001' }),
     );
 
-    const metaJsonPath = testRoot.replaceAll('\\', '/') + '/domain/.meta/meta.json';
+    const metaJsonPath =
+      testRoot.replaceAll('\\', '/') + '/domain/.meta/meta.json';
     const watcher = createMockWatcher(['test-file.md'], [metaJsonPath]);
     const executor: SynthExecutor = {
       spawn: vi.fn().mockImplementation((task: string) => {
@@ -219,7 +222,8 @@ describe('orchestrate', () => {
       JSON.stringify({ pid: 99999, startedAt: new Date().toISOString() }),
     );
 
-    const metaJsonPath = testRoot.replaceAll('\\', '/') + '/domain/.meta/meta.json';
+    const metaJsonPath =
+      testRoot.replaceAll('\\', '/') + '/domain/.meta/meta.json';
     const watcher = createMockWatcher([], [metaJsonPath]);
     const executor = createMockExecutor();
     const results = await orchestrate(config, executor, watcher);

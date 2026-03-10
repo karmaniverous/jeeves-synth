@@ -15,18 +15,22 @@ const config = {
   metaArchiveProperty: { domains: ['meta-archive'] },
 } as SynthConfig;
 
-function mockWatcher(files: Array<{ file_path: string }>): WatcherClient {
-  return {
-    scan: vi.fn().mockResolvedValue({
-      files: files.map((f) => ({
-        ...f,
-        modified_at: 0,
-        content_hash: 'abc',
-      })),
-    }),
+function mockWatcher(files: Array<{ file_path: string }>) {
+  const scan = vi.fn().mockResolvedValue({
+    files: files.map((f) => ({
+      ...f,
+      modified_at: 0,
+      content_hash: 'abc',
+    })),
+  });
+
+  const watcher: WatcherClient = {
+    scan,
     registerRules: vi.fn().mockResolvedValue(undefined),
     unregisterRules: vi.fn().mockResolvedValue(undefined),
   };
+
+  return { watcher, scan };
 }
 
 describe('buildMetaFilter', () => {
@@ -51,7 +55,7 @@ describe('buildMetaFilter', () => {
 
 describe('discoverMetas', () => {
   it('returns meta paths from scan results', async () => {
-    const watcher = mockWatcher([
+    const { watcher } = mockWatcher([
       { file_path: 'j:/domains/email/.meta/meta.json' },
       { file_path: 'j:/domains/github/.meta/meta.json' },
     ]);
@@ -63,7 +67,7 @@ describe('discoverMetas', () => {
   });
 
   it('deduplicates multi-chunk files', async () => {
-    const watcher = mockWatcher([
+    const { watcher } = mockWatcher([
       { file_path: 'j:/domains/email/.meta/meta.json' },
       { file_path: 'j:/domains/email/.meta/meta.json' },
     ]);
@@ -72,15 +76,15 @@ describe('discoverMetas', () => {
   });
 
   it('returns empty array when no metas found', async () => {
-    const watcher = mockWatcher([]);
+    const { watcher } = mockWatcher([]);
     const result = await discoverMetas(config, watcher);
     expect(result).toEqual([]);
   });
 
   it('passes domain filter to scan', async () => {
-    const watcher = mockWatcher([]);
+    const { watcher, scan } = mockWatcher([]);
     await discoverMetas(config, watcher);
-    expect(watcher.scan).toHaveBeenCalledWith(
+    expect(scan).toHaveBeenCalledWith(
       expect.objectContaining({
         filter: { must: [{ key: 'domains', match: { value: 'meta' } }] },
       }),
@@ -88,7 +92,7 @@ describe('discoverMetas', () => {
   });
 
   it('normalizes backslash paths', async () => {
-    const watcher = mockWatcher([
+    const { watcher } = mockWatcher([
       { file_path: 'j:\\domains\\email\\.meta\\meta.json' },
     ]);
     const result = await discoverMetas(config, watcher);

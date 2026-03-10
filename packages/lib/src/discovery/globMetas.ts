@@ -13,6 +13,9 @@ import { join } from 'node:path';
 /**
  * Recursively find all .meta/ directories under the given paths.
  *
+ * for indexed .meta/meta.json points rather than walking the filesystem.
+ * Retained for backward compatibility and testing.
+ *
  * @param watchPaths - Root directories to search.
  * @returns Array of absolute paths to .meta/ directories.
  */

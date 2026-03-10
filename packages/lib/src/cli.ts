@@ -16,7 +16,6 @@ import { resolve } from 'node:path';
 import { loadSynthConfig, resolveConfigPath } from './configLoader.js';
 import {
   actualStaleness,
-  buildMetaFilter,
   buildOwnershipTree,
   computeEffectiveStaleness,
   discoverMetas,
@@ -26,10 +25,18 @@ import {
   HttpWatcherClient,
   isArchitectTriggered,
   isLocked,
+  type MetaJson,
   normalizePath,
   orchestrate,
   type SynthConfig,
 } from './index.js';
+
+/** Read and parse a meta.json file with proper typing. */
+function readMeta(metaPath: string): MetaJson {
+  return JSON.parse(
+    readFileSync(join(metaPath, 'meta.json'), 'utf8'),
+  ) as MetaJson;
+}
 
 const args = process.argv.slice(2);
 const command = args.find((a) => !a.startsWith('-'));
@@ -81,10 +88,12 @@ async function runStatus(config: SynthConfig): Promise<void> {
   let critTokens = 0;
 
   for (const node of tree.nodes.values()) {
-    let meta;
+    let meta: MetaJson;
     try {
-      meta = JSON.parse(readFileSync(join(node.metaPath, 'meta.json'), 'utf8'));
-    } catch { continue; }
+      meta = readMeta(node.metaPath);
+    } catch {
+      continue;
+    }
     const s = actualStaleness(meta);
     if (s > 0) stale++;
     if (meta._error) errors++;
@@ -124,10 +133,12 @@ async function runList(config: SynthConfig): Promise<void> {
   const rows: Row[] = [];
   for (const node of tree.nodes.values()) {
     if (prefix && !node.metaPath.includes(prefix)) continue;
-    let meta;
+    let meta: MetaJson;
     try {
-      meta = JSON.parse(readFileSync(join(node.metaPath, 'meta.json'), 'utf8'));
-    } catch { continue; }
+      meta = readMeta(node.metaPath);
+    } catch {
+      continue;
+    }
     const s = actualStaleness(meta);
     const hasError = Boolean(meta._error);
     const isLockedNow = isLocked(normalizePath(node.metaPath));
@@ -169,7 +180,7 @@ async function runDetail(config: SynthConfig): Promise<void> {
     process.exit(1);
   }
 
-  const meta = JSON.parse(readFileSync(join(node.metaPath, 'meta.json'), 'utf8'));
+  const meta = readMeta(node.metaPath);
   const result: Record<string, unknown> = { meta };
 
   if (archiveArg) {
@@ -211,10 +222,12 @@ async function runPreview(config: SynthConfig): Promise<void> {
   } else {
     const candidates = [];
     for (const node of tree.nodes.values()) {
-      let meta;
+      let meta: MetaJson;
       try {
-        meta = JSON.parse(readFileSync(join(node.metaPath, 'meta.json'), 'utf8'));
-      } catch { continue; }
+        meta = readMeta(node.metaPath);
+      } catch {
+        continue;
+      }
       const s = actualStaleness(meta);
       if (s > 0) candidates.push({ node, meta, actualStaleness: s });
     }
@@ -227,7 +240,7 @@ async function runPreview(config: SynthConfig): Promise<void> {
     targetNode = winner.node;
   }
 
-  const meta = JSON.parse(readFileSync(join(targetNode.metaPath, 'meta.json'), 'utf8'));
+  const meta = readMeta(targetNode.metaPath);
   const allFiles = await paginatedScan(watcher, {
     pathPrefix: targetNode.ownerPath,
   });
@@ -365,7 +378,8 @@ async function runValidate(config: SynthConfig): Promise<void> {
   try {
     const watcherClient = new HttpWatcherClient({ baseUrl: config.watcherUrl });
     const metaPaths = await discoverMetas(config, watcherClient);
-    checks.metas = String(metaPaths.length) + ' .meta/ entities discovered via watcher';
+    checks.metas =
+      String(metaPaths.length) + ' .meta/ entities discovered via watcher';
   } catch {
     checks.metas = 'FAILED — could not discover metas (watcher may be down)';
   }

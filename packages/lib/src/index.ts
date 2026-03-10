@@ -12,14 +12,14 @@ export {
 } from './archive/index.js';
 export { loadSynthConfig, resolveConfigPath } from './configLoader.js';
 export {
+  buildMetaFilter,
   buildOwnershipTree,
+  discoverMetas,
   ensureMetaJson,
   filterInScope,
   findNode,
   getScopeExclusions,
   getScopePrefix,
-  buildMetaFilter,
-  discoverMetas,
   globMetas,
   type MetaNode,
   type OwnershipTree,

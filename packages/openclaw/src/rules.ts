@@ -9,9 +9,8 @@
  * @module rules
  */
 
-import { HttpWatcherClient } from '@karmaniverous/jeeves-meta';
-
 import type { SynthConfig } from '@karmaniverous/jeeves-meta';
+import { HttpWatcherClient } from '@karmaniverous/jeeves-meta';
 
 const SOURCE = 'jeeves-meta';
 
@@ -23,166 +22,166 @@ const SOURCE = 'jeeves-meta';
  */
 function buildSynthRules(config: SynthConfig) {
   return [
-  {
-    name: 'synth-meta-live',
-    description: 'Live jeeves-meta .meta/meta.json files',
-    match: {
-      properties: {
-        file: {
-          properties: {
-            path: { type: 'string', glob: '**/.meta/meta.json' },
-          },
-        },
-      },
-    },
-    schema: [
-      'base',
-      {
+    {
+      name: 'synth-meta-live',
+      description: 'Live jeeves-meta .meta/meta.json files',
+      match: {
         properties: {
-          domains: { set: config.metaProperty.domains },
-          synth_id: { type: 'string', set: '{{json._id}}' },
-          synth_steer: { type: 'string', set: '{{json._steer}}' },
-          synth_depth: { type: 'number', set: '{{json._depth}}' },
-          synth_emphasis: { type: 'number', set: '{{json._emphasis}}' },
-          synth_synthesis_count: {
-            type: 'integer',
-            set: '{{json._synthesisCount}}',
-          },
-          synth_structure_hash: {
-            type: 'string',
-            set: '{{json._structureHash}}',
-          },
-          synth_architect_tokens: {
-            type: 'integer',
-            set: '{{json._architectTokens}}',
-          },
-          synth_builder_tokens: {
-            type: 'integer',
-            set: '{{json._builderTokens}}',
-          },
-          synth_critic_tokens: {
-            type: 'integer',
-            set: '{{json._criticTokens}}',
-          },
-          synth_error_step: {
-            type: 'string',
-            set: '{{json._error.step}}',
-          },
-          generated_at_unix: {
-            type: 'integer',
-            set: '{{toUnix json._generatedAt}}',
-            description:
-              'Synthesis timestamp as Unix seconds for range queries',
-          },
-          has_error: {
-            type: 'boolean',
-            set: '{{#if json._error}}true{{else}}false{{/if}}',
+          file: {
+            properties: {
+              path: { type: 'string', glob: '**/.meta/meta.json' },
+            },
           },
         },
       },
-    ],
-    render: {
-      frontmatter: [
-        'synth_id',
-        'synth_steer',
-        'generated_at_unix',
-        'synth_depth',
-        'synth_emphasis',
-        'synth_architect_tokens',
-        'synth_builder_tokens',
-        'synth_critic_tokens',
-      ],
-      body: [
+      schema: [
+        'base',
         {
-          path: 'json._content',
-          heading: 1,
-          label: 'Synthesis',
-        },
-      ],
-    },
-    renderAs: 'md',
-  },
-  {
-    name: 'synth-meta-archive',
-    description: 'Archived jeeves-meta .meta/archive snapshots',
-    match: {
-      properties: {
-        file: {
           properties: {
-            path: { type: 'string', glob: '**/.meta/archive/*.json' },
+            domains: { set: config.metaProperty.domains },
+            synth_id: { type: 'string', set: '{{json._id}}' },
+            synth_steer: { type: 'string', set: '{{json._steer}}' },
+            synth_depth: { type: 'number', set: '{{json._depth}}' },
+            synth_emphasis: { type: 'number', set: '{{json._emphasis}}' },
+            synth_synthesis_count: {
+              type: 'integer',
+              set: '{{json._synthesisCount}}',
+            },
+            synth_structure_hash: {
+              type: 'string',
+              set: '{{json._structureHash}}',
+            },
+            synth_architect_tokens: {
+              type: 'integer',
+              set: '{{json._architectTokens}}',
+            },
+            synth_builder_tokens: {
+              type: 'integer',
+              set: '{{json._builderTokens}}',
+            },
+            synth_critic_tokens: {
+              type: 'integer',
+              set: '{{json._criticTokens}}',
+            },
+            synth_error_step: {
+              type: 'string',
+              set: '{{json._error.step}}',
+            },
+            generated_at_unix: {
+              type: 'integer',
+              set: '{{toUnix json._generatedAt}}',
+              description:
+                'Synthesis timestamp as Unix seconds for range queries',
+            },
+            has_error: {
+              type: 'boolean',
+              set: '{{#if json._error}}true{{else}}false{{/if}}',
+            },
+          },
+        },
+      ],
+      render: {
+        frontmatter: [
+          'synth_id',
+          'synth_steer',
+          'generated_at_unix',
+          'synth_depth',
+          'synth_emphasis',
+          'synth_architect_tokens',
+          'synth_builder_tokens',
+          'synth_critic_tokens',
+        ],
+        body: [
+          {
+            path: 'json._content',
+            heading: 1,
+            label: 'Synthesis',
+          },
+        ],
+      },
+      renderAs: 'md',
+    },
+    {
+      name: 'synth-meta-archive',
+      description: 'Archived jeeves-meta .meta/archive snapshots',
+      match: {
+        properties: {
+          file: {
+            properties: {
+              path: { type: 'string', glob: '**/.meta/archive/*.json' },
+            },
           },
         },
       },
-    },
-    schema: [
-      'base',
-      {
-        properties: {
-          domains: { set: config.metaArchiveProperty.domains },
-          synth_id: { type: 'string', set: '{{json._id}}' },
-          archived: { type: 'boolean', set: 'true' },
-          archived_at: { type: 'string', set: '{{json._archivedAt}}' },
-        },
-      },
-    ],
-    render: {
-      frontmatter: ['synth_id', 'archived', 'archived_at'],
-      body: [
+      schema: [
+        'base',
         {
-          path: 'json._content',
-          heading: 1,
-          label: 'Synthesis (archived)',
-        },
-      ],
-    },
-    renderAs: 'md',
-  },
-  {
-    name: 'synth-config',
-    description: 'jeeves-meta configuration file',
-    match: {
-      properties: {
-        file: {
           properties: {
-            path: { type: 'string', glob: '**/jeeves-meta.config.json' },
+            domains: { set: config.metaArchiveProperty.domains },
+            synth_id: { type: 'string', set: '{{json._id}}' },
+            archived: { type: 'boolean', set: 'true' },
+            archived_at: { type: 'string', set: '{{json._archivedAt}}' },
+          },
+        },
+      ],
+      render: {
+        frontmatter: ['synth_id', 'archived', 'archived_at'],
+        body: [
+          {
+            path: 'json._content',
+            heading: 1,
+            label: 'Synthesis (archived)',
+          },
+        ],
+      },
+      renderAs: 'md',
+    },
+    {
+      name: 'synth-config',
+      description: 'jeeves-meta configuration file',
+      match: {
+        properties: {
+          file: {
+            properties: {
+              path: { type: 'string', glob: '**/jeeves-meta.config.json' },
+            },
           },
         },
       },
-    },
-    schema: [
-      'base',
-      {
-        properties: {
-          domains: { set: ['synth-config'] },
+      schema: [
+        'base',
+        {
+          properties: {
+            domains: { set: ['synth-config'] },
+          },
         },
+      ],
+      render: {
+        frontmatter: [
+          'watchPaths',
+          'watcherUrl',
+          'gatewayUrl',
+          'architectEvery',
+          'depthWeight',
+          'maxArchive',
+          'maxLines',
+          'batchSize',
+        ],
+        body: [
+          {
+            path: 'json.defaultArchitect',
+            heading: 2,
+            label: 'Default Architect Prompt',
+          },
+          {
+            path: 'json.defaultCritic',
+            heading: 2,
+            label: 'Default Critic Prompt',
+          },
+        ],
       },
-    ],
-    render: {
-      frontmatter: [
-        'watchPaths',
-        'watcherUrl',
-        'gatewayUrl',
-        'architectEvery',
-        'depthWeight',
-        'maxArchive',
-        'maxLines',
-        'batchSize',
-      ],
-      body: [
-        {
-          path: 'json.defaultArchitect',
-          heading: 2,
-          label: 'Default Architect Prompt',
-        },
-        {
-          path: 'json.defaultCritic',
-          heading: 2,
-          label: 'Default Critic Prompt',
-        },
-      ],
+      renderAs: 'md',
     },
-    renderAs: 'md',
-  },
   ];
 }
 

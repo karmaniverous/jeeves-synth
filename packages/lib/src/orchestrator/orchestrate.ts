@@ -15,8 +15,8 @@ import {
   pruneArchive,
   readLatestArchive,
 } from '../archive/index.js';
-import { buildOwnershipTree } from '../discovery/index.js';
 import { discoverMetas } from '../discovery/discoverMetas.js';
+import { buildOwnershipTree } from '../discovery/index.js';
 import { filterInScope, getScopePrefix } from '../discovery/scope.js';
 import { toSynthError } from '../errors.js';
 import type { SynthExecutor, WatcherClient } from '../interfaces/index.js';
@@ -118,7 +118,10 @@ async function orchestrateOnce(
   for (const mp of metaPaths) {
     const metaFilePath = join(mp, 'meta.json');
     try {
-      metas.set(normalizePath(mp), JSON.parse(readFileSync(metaFilePath, 'utf8')) as MetaJson);
+      metas.set(
+        normalizePath(mp),
+        JSON.parse(readFileSync(metaFilePath, 'utf8')) as MetaJson,
+      );
     } catch {
       // Skip metas with unreadable meta.json
       continue;
