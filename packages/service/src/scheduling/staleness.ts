@@ -37,16 +37,23 @@ export async function isStale(
   return result.files.length > 0;
 }
 
+/** Maximum staleness for never-synthesized metas (1 year in seconds). */
+const MAX_STALENESS_SECONDS = 365 * 86_400;
+
 /**
  * Compute actual staleness in seconds (now minus _generatedAt).
  *
+ * Never-synthesized metas are capped at {@link MAX_STALENESS_SECONDS}
+ * (1 year) so that depth weighting can differentiate them. Without
+ * bounding, `Infinity * depthFactor` = `Infinity` for all depths.
+ *
  * @param meta - Current meta.json content.
- * @returns Staleness in seconds, or Infinity if never synthesized.
+ * @returns Staleness in seconds, capped at 1 year for never-synthesized metas.
  */
 export function actualStaleness(meta: MetaJson): number {
-  if (!meta._generatedAt) return Infinity;
+  if (!meta._generatedAt) return MAX_STALENESS_SECONDS;
   const generatedMs = new Date(meta._generatedAt).getTime();
-  return (Date.now() - generatedMs) / 1000;
+  return Math.min((Date.now() - generatedMs) / 1000, MAX_STALENESS_SECONDS);
 }
 
 /**

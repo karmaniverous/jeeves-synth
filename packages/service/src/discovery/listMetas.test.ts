@@ -156,7 +156,7 @@ describe('listMetas', () => {
 
     expect(result.entries).toHaveLength(1);
     expect(result.summary.neverSynthesized).toBe(1);
-    expect(result.entries[0].stalenessSeconds).toBe(Infinity);
+    expect(result.entries[0].stalenessSeconds).toBe(365 * 86_400);
     expect(result.entries[0].lastSynthesized).toBeNull();
   });
 

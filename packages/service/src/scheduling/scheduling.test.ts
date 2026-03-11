@@ -28,8 +28,8 @@ function makeMeta(overrides: Partial<MetaJson> = {}): MetaJson {
 }
 
 describe('actualStaleness', () => {
-  it('returns Infinity for never-synthesized meta', () => {
-    expect(actualStaleness(makeMeta())).toBe(Infinity);
+  it('returns MAX_STALENESS_SECONDS for never-synthesized meta', () => {
+    expect(actualStaleness(makeMeta())).toBe(365 * 86_400);
   });
 
   it('returns positive seconds for past _generatedAt', () => {

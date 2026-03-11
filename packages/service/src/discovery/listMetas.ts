@@ -13,6 +13,9 @@ import { join } from 'node:path';
 
 import type { WatcherClient } from '../interfaces/index.js';
 import { isLocked } from '../lock.js';
+
+/** Maximum staleness for never-synthesized metas (1 year in seconds). */
+const MAX_STALENESS_SECONDS = 365 * 86_400;
 import { normalizePath } from '../normalizePath.js';
 import type { MetaConfig, MetaJson } from '../schema/index.js';
 import { discoverMetas } from './discoverMetas.js';
@@ -128,7 +131,7 @@ export async function listMetas(
     // Compute staleness
     let stalenessSeconds: number;
     if (neverSynth) {
-      stalenessSeconds = Infinity;
+      stalenessSeconds = MAX_STALENESS_SECONDS;
     } else {
       const genAt = new Date(meta._generatedAt!).getTime();
       stalenessSeconds = Math.max(0, Math.floor((Date.now() - genAt) / 1000));
@@ -158,12 +161,7 @@ export async function listMetas(
 
     // Track stalest (effective staleness for scheduling)
     const depthFactor = Math.pow(1 + config.depthWeight, depth);
-    const effectiveStaleness =
-      (stalenessSeconds === Infinity
-        ? Number.MAX_SAFE_INTEGER
-        : stalenessSeconds) *
-      depthFactor *
-      emphasis;
+    const effectiveStaleness = stalenessSeconds * depthFactor * emphasis;
     if (effectiveStaleness > stalestEffective) {
       stalestEffective = effectiveStaleness;
       stalestPath = node.metaPath;
