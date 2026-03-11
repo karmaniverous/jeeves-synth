@@ -81,6 +81,7 @@ export {
   parseArchitectOutput,
   parseBuilderOutput,
   parseCriticOutput,
+  type ProgressCallback,
 } from './orchestrator/index.js';
 
 // ── Progress ──
@@ -243,7 +244,15 @@ export async function startService(
     });
 
     try {
-      const results = await orchestrate(config, executor, watcher, path);
+      const results = await orchestrate(
+        config,
+        executor,
+        watcher,
+        path,
+        async (evt) => {
+          await progress.report(evt);
+        },
+      );
       // orchestrate() always returns exactly one result
       const result = results[0];
       const durationMs = Date.now() - startMs;

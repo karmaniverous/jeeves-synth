@@ -7,7 +7,7 @@
  * @module orchestrator/orchestrate
  */
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
@@ -24,6 +24,7 @@ import type { MetaExecutor, WatcherClient } from '../interfaces/index.js';
 import { acquireLock, releaseLock } from '../lock.js';
 import { normalizePath } from '../normalizePath.js';
 import { paginatedScan } from '../paginatedScan.js';
+import type { ProgressEvent } from '../progress/index.js';
 import {
   actualStaleness,
   computeEffectiveStaleness,
@@ -47,6 +48,9 @@ import {
   parseCriticOutput,
 } from './parseOutput.js';
 
+/** Callback for synthesis progress events. */
+export type ProgressCallback = (event: ProgressEvent) => void | Promise<void>;
+
 /** Result of a single orchestration cycle. */
 export interface OrchestrateResult {
   /** Whether a synthesis was performed. */
@@ -57,7 +61,7 @@ export interface OrchestrateResult {
   error?: MetaError;
 }
 
-/** Finalize a cycle: merge, snapshot, prune. */
+/** Finalize a cycle using lock staging: write to .lock → copy to meta.json + archive → delete .lock. */
 function finalizeCycle(
   metaPath: string,
   current: MetaJson,
@@ -74,6 +78,10 @@ function finalizeCycle(
   builderTokens?: number,
   criticTokens?: number,
 ): MetaJson {
+  const lockPath = join(metaPath, '.lock');
+  const metaJsonPath = join(metaPath, 'meta.json');
+
+  // Stage: write merged result to .lock
   const updated = mergeAndWrite({
     metaPath,
     current,
@@ -88,9 +96,17 @@ function finalizeCycle(
     architectTokens,
     builderTokens,
     criticTokens,
+    outputPath: lockPath,
   });
+
+  // Commit: copy .lock → meta.json
+  copyFileSync(lockPath, metaJsonPath);
+
+  // Archive + prune from the committed meta.json
   createSnapshot(metaPath, updated);
   pruneArchive(metaPath, config.maxArchive);
+
+  // .lock is cleaned up by the finally block (releaseLock)
   return updated;
 }
 
@@ -110,6 +126,7 @@ async function orchestrateOnce(
   executor: MetaExecutor,
   watcher: WatcherClient,
   targetPath?: string,
+  onProgress?: ProgressCallback,
 ): Promise<OrchestrateResult> {
   // Step 1: Discover via watcher scan
   const metaPaths = await discoverMetas(config, watcher);
@@ -249,6 +266,12 @@ async function orchestrateOnce(
 
     if (architectTriggered) {
       try {
+        await onProgress?.({
+          type: 'phase_start',
+          metaPath: node.metaPath,
+          phase: 'architect',
+        });
+        const phaseStart = Date.now();
         const architectTask = buildArchitectTask(ctx, currentMeta, config);
         const architectResult = await executor.spawn(architectTask, {
           thinking: config.thinking,
@@ -257,6 +280,13 @@ async function orchestrateOnce(
         builderBrief = parseArchitectOutput(architectResult.output);
         architectTokens = architectResult.tokens;
         synthesisCount = 0;
+        await onProgress?.({
+          type: 'phase_complete',
+          metaPath: node.metaPath,
+          phase: 'architect',
+          tokens: architectTokens,
+          durationMs: Date.now() - phaseStart,
+        });
       } catch (err) {
         stepError = toMetaError('architect', err);
 
@@ -290,6 +320,12 @@ async function orchestrateOnce(
     const metaForBuilder: MetaJson = { ...currentMeta, _builder: builderBrief };
     let builderOutput: BuilderOutput | null = null;
     try {
+      await onProgress?.({
+        type: 'phase_start',
+        metaPath: node.metaPath,
+        phase: 'builder',
+      });
+      const builderStart = Date.now();
       const builderTask = buildBuilderTask(ctx, metaForBuilder, config);
       const builderResult = await executor.spawn(builderTask, {
         thinking: config.thinking,
@@ -298,6 +334,13 @@ async function orchestrateOnce(
       builderOutput = parseBuilderOutput(builderResult.output);
       builderTokens = builderResult.tokens;
       synthesisCount++;
+      await onProgress?.({
+        type: 'phase_complete',
+        metaPath: node.metaPath,
+        phase: 'builder',
+        tokens: builderTokens,
+        durationMs: Date.now() - builderStart,
+      });
     } catch (err) {
       stepError = toMetaError('builder', err);
       return { synthesized: true, metaPath: node.metaPath, error: stepError };
@@ -310,6 +353,12 @@ async function orchestrateOnce(
     };
     let feedback: string | null = null;
     try {
+      await onProgress?.({
+        type: 'phase_start',
+        metaPath: node.metaPath,
+        phase: 'critic',
+      });
+      const criticStart = Date.now();
       const criticTask = buildCriticTask(ctx, metaForCritic, config);
       const criticResult = await executor.spawn(criticTask, {
         thinking: config.thinking,
@@ -318,6 +367,13 @@ async function orchestrateOnce(
       feedback = parseCriticOutput(criticResult.output);
       criticTokens = criticResult.tokens;
       stepError = null; // Clear any architect error on full success
+      await onProgress?.({
+        type: 'phase_complete',
+        metaPath: node.metaPath,
+        phase: 'critic',
+        tokens: criticTokens,
+        durationMs: Date.now() - criticStart,
+      });
     } catch (err) {
       stepError = stepError ?? toMetaError('critic', err);
     }
@@ -367,7 +423,14 @@ export async function orchestrate(
   executor: MetaExecutor,
   watcher: WatcherClient,
   targetPath?: string,
+  onProgress?: ProgressCallback,
 ): Promise<OrchestrateResult[]> {
-  const result = await orchestrateOnce(config, executor, watcher, targetPath);
+  const result = await orchestrateOnce(
+    config,
+    executor,
+    watcher,
+    targetPath,
+    onProgress,
+  );
   return [result];
 }

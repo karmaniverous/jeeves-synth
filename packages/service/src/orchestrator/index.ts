@@ -11,7 +11,11 @@ export {
 } from './buildTask.js';
 export { buildContextPackage } from './contextPackage.js';
 export { mergeAndWrite, type MergeOptions } from './merge.js';
-export { orchestrate, type OrchestrateResult } from './orchestrate.js';
+export {
+  orchestrate,
+  type OrchestrateResult,
+  type ProgressCallback,
+} from './orchestrate.js';
 export {
   type BuilderOutput,
   parseArchitectOutput,

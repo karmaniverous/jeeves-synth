@@ -44,6 +44,8 @@ export interface MergeOptions {
   builderTokens?: number;
   /** Token count from critic step. */
   criticTokens?: number;
+  /** Override output path (default: metaPath/meta.json). Used for lock staging. */
+  outputPath?: string;
 }
 
 /**
@@ -123,8 +125,8 @@ export function mergeAndWrite(options: MergeOptions): MetaJson {
     throw new Error(`Meta validation failed: ${result.error.message}`);
   }
 
-  // Write atomically
-  const filePath = join(options.metaPath, 'meta.json');
+  // Write to specified path (lock staging) or default meta.json
+  const filePath = options.outputPath ?? join(options.metaPath, 'meta.json');
   writeFileSync(filePath, JSON.stringify(result.data, null, 2) + '\n');
 
   return result.data;
