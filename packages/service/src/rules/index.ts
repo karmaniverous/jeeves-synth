@@ -9,8 +9,8 @@
 
 import type { Logger } from 'pino';
 
+import type { WatcherClient } from '../interfaces/index.js';
 import type { MetaConfig } from '../schema/config.js';
-import { HttpWatcherClient } from '../watcher-client/index.js';
 
 const SOURCE = 'jeeves-meta';
 const MAX_RETRIES = 10;
@@ -187,16 +187,18 @@ function buildMetaRules(config: MetaConfig) {
 export class RuleRegistrar {
   private readonly config: MetaConfig;
   private readonly logger: Logger;
-  private readonly watcherClient: HttpWatcherClient;
+  private readonly watcherClient: WatcherClient;
   private lastWatcherUptime: number | null = null;
   private registered = false;
 
-  public constructor(config: MetaConfig, logger: Logger) {
+  public constructor(
+    config: MetaConfig,
+    logger: Logger,
+    watcher: WatcherClient,
+  ) {
     this.config = config;
     this.logger = logger;
-    this.watcherClient = new HttpWatcherClient({
-      baseUrl: config.watcherUrl,
-    });
+    this.watcherClient = watcher;
   }
 
   /** Whether rules have been successfully registered. */

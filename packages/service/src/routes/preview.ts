@@ -14,11 +14,10 @@ import { filterInScope, findNode, listMetas } from '../discovery/index.js';
 import { normalizePath } from '../normalizePath.js';
 import { paginatedScan } from '../paginatedScan.js';
 import {
-  computeEffectiveStaleness,
   computeStalenessScore,
+  discoverStalestPath,
   hasSteerChanged,
   isArchitectTriggered,
-  selectCandidate,
 } from '../scheduling/index.js';
 import type { MetaJson } from '../schema/index.js';
 import { computeStructureHash } from '../structureHash.js';
@@ -54,22 +53,18 @@ export function registerPreviewRoute(
       }
     } else {
       // Select stalest candidate
-      const candidates = result.entries
+      const stale = result.entries
         .filter((e) => e.stalenessSeconds > 0)
         .map((e) => ({
           node: e.node,
           meta: e.meta,
           actualStaleness: e.stalenessSeconds,
         }));
-      const weighted = computeEffectiveStaleness(
-        candidates,
-        config.depthWeight,
-      );
-      const winner = selectCandidate(weighted);
-      if (!winner) {
+      const stalestPath = discoverStalestPath(stale, config.depthWeight);
+      if (!stalestPath) {
         return { message: 'No stale metas found. Nothing to synthesize.' };
       }
-      targetNode = winner.node;
+      targetNode = findNode(result.tree, stalestPath)!;
     }
 
     const meta: MetaJson = JSON.parse(

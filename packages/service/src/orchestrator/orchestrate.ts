@@ -61,41 +61,44 @@ export interface OrchestrateResult {
   error?: MetaError;
 }
 
+/** Options for finalizeCycle. */
+interface FinalizeCycleOptions {
+  metaPath: string;
+  current: MetaJson;
+  config: MetaConfig;
+  architect: string;
+  builder: string;
+  critic: string;
+  builderOutput: BuilderOutput | null;
+  feedback: string | null;
+  structureHash: string;
+  synthesisCount: number;
+  error: MetaError | null;
+  architectTokens?: number;
+  builderTokens?: number;
+  criticTokens?: number;
+}
+
 /** Finalize a cycle using lock staging: write to .lock → copy to meta.json + archive → delete .lock. */
-function finalizeCycle(
-  metaPath: string,
-  current: MetaJson,
-  config: MetaConfig,
-  architect: string,
-  builder: string,
-  critic: string,
-  builderOutput: BuilderOutput | null,
-  feedback: string | null,
-  structureHash: string,
-  synthesisCount: number,
-  error: MetaError | null,
-  architectTokens?: number,
-  builderTokens?: number,
-  criticTokens?: number,
-): MetaJson {
-  const lockPath = join(metaPath, '.lock');
-  const metaJsonPath = join(metaPath, 'meta.json');
+function finalizeCycle(opts: FinalizeCycleOptions): MetaJson {
+  const lockPath = join(opts.metaPath, '.lock');
+  const metaJsonPath = join(opts.metaPath, 'meta.json');
 
   // Stage: write merged result to .lock
   const updated = mergeAndWrite({
-    metaPath,
-    current,
-    architect,
-    builder,
-    critic,
-    builderOutput,
-    feedback,
-    structureHash,
-    synthesisCount,
-    error,
-    architectTokens,
-    builderTokens,
-    criticTokens,
+    metaPath: opts.metaPath,
+    current: opts.current,
+    architect: opts.architect,
+    builder: opts.builder,
+    critic: opts.critic,
+    builderOutput: opts.builderOutput,
+    feedback: opts.feedback,
+    structureHash: opts.structureHash,
+    synthesisCount: opts.synthesisCount,
+    error: opts.error,
+    architectTokens: opts.architectTokens,
+    builderTokens: opts.builderTokens,
+    criticTokens: opts.criticTokens,
     outputPath: lockPath,
   });
 
@@ -103,8 +106,8 @@ function finalizeCycle(
   copyFileSync(lockPath, metaJsonPath);
 
   // Archive + prune from the committed meta.json
-  createSnapshot(metaPath, updated);
-  pruneArchive(metaPath, config.maxArchive);
+  createSnapshot(opts.metaPath, updated);
+  pruneArchive(opts.metaPath, opts.config.maxArchive);
 
   // .lock is cleaned up by the finally block (releaseLock)
   return updated;
@@ -292,20 +295,20 @@ async function orchestrateOnce(
 
         if (!currentMeta._builder) {
           // No cached builder — cycle fails
-          finalizeCycle(
-            node.metaPath,
-            currentMeta,
+          finalizeCycle({
+            metaPath: node.metaPath,
+            current: currentMeta,
             config,
-            architectPrompt,
-            '',
-            criticPrompt,
-            null,
-            null,
-            newStructureHash,
+            architect: architectPrompt,
+            builder: '',
+            critic: criticPrompt,
+            builderOutput: null,
+            feedback: null,
+            structureHash: newStructureHash,
             synthesisCount,
-            stepError,
+            error: stepError,
             architectTokens,
-          );
+          });
           return {
             synthesized: true,
             metaPath: node.metaPath,
@@ -379,22 +382,22 @@ async function orchestrateOnce(
     }
 
     // Steps 11-12: Merge, archive, prune
-    finalizeCycle(
-      node.metaPath,
-      currentMeta,
+    finalizeCycle({
+      metaPath: node.metaPath,
+      current: currentMeta,
       config,
-      architectPrompt,
-      builderBrief,
-      criticPrompt,
+      architect: architectPrompt,
+      builder: builderBrief,
+      critic: criticPrompt,
       builderOutput,
       feedback,
-      newStructureHash,
+      structureHash: newStructureHash,
       synthesisCount,
-      stepError,
+      error: stepError,
       architectTokens,
       builderTokens,
       criticTokens,
-    );
+    });
 
     return {
       synthesized: true,

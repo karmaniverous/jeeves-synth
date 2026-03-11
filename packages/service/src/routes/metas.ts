@@ -51,6 +51,65 @@ const metaDetailQuerySchema = z.object({
     .optional(),
 });
 
+/** Compute summary stats from a filtered set of MetaEntries. */
+function computeFilteredSummary(
+  entries: Array<{
+    path: string;
+    stalenessSeconds: number;
+    hasError: boolean;
+    lastSynthesized: string | null;
+    architectTokens: number | null;
+    builderTokens: number | null;
+    criticTokens: number | null;
+  }>,
+) {
+  let staleCount = 0;
+  let errorCount = 0;
+  let neverSynthCount = 0;
+  let stalestPath: string | null = null;
+  let stalestSeconds = -1;
+  let lastSynthesizedPath: string | null = null;
+  let lastSynthesizedAt: string | null = null;
+  let totalArchitectTokens = 0;
+  let totalBuilderTokens = 0;
+  let totalCriticTokens = 0;
+
+  for (const e of entries) {
+    if (e.stalenessSeconds > 0) staleCount++;
+    if (e.hasError) errorCount++;
+    if (e.stalenessSeconds === Infinity) neverSynthCount++;
+    if (e.stalenessSeconds > stalestSeconds) {
+      stalestSeconds = e.stalenessSeconds;
+      stalestPath = e.path;
+    }
+    if (
+      e.lastSynthesized &&
+      (!lastSynthesizedAt || e.lastSynthesized > lastSynthesizedAt)
+    ) {
+      lastSynthesizedAt = e.lastSynthesized;
+      lastSynthesizedPath = e.path;
+    }
+    totalArchitectTokens += e.architectTokens ?? 0;
+    totalBuilderTokens += e.builderTokens ?? 0;
+    totalCriticTokens += e.criticTokens ?? 0;
+  }
+
+  return {
+    total: entries.length,
+    stale: staleCount,
+    errors: errorCount,
+    neverSynthesized: neverSynthCount,
+    stalestPath,
+    lastSynthesizedPath,
+    lastSynthesizedAt,
+    tokens: {
+      architect: totalArchitectTokens,
+      builder: totalBuilderTokens,
+      critic: totalCriticTokens,
+    },
+  };
+}
+
 export function registerMetasRoutes(
   app: FastifyInstance,
   deps: RouteDeps,
@@ -83,43 +142,8 @@ export function registerMetasRoutes(
       );
     }
 
-    // Summary
-    let staleCount = 0;
-    let errorCount = 0;
-    let neverSynthCount = 0;
-    let stalestPath: string | null = null;
-    let stalestSeconds = -1;
-    let lastSynthesizedPath: string | null = null;
-    let lastSynthesizedAt: string | null = null;
-    let totalArchitectTokens = 0;
-    let totalBuilderTokens = 0;
-    let totalCriticTokens = 0;
-
-    for (const e of entries) {
-      if (e.stalenessSeconds > 0) staleCount++;
-      if (e.hasError) errorCount++;
-      if (e.stalenessSeconds === Infinity) neverSynthCount++;
-
-      // Track stalest
-      if (e.stalenessSeconds > stalestSeconds) {
-        stalestSeconds = e.stalenessSeconds;
-        stalestPath = e.path;
-      }
-
-      // Track last synthesized
-      if (
-        e.lastSynthesized &&
-        (!lastSynthesizedAt || e.lastSynthesized > lastSynthesizedAt)
-      ) {
-        lastSynthesizedAt = e.lastSynthesized;
-        lastSynthesizedPath = e.path;
-      }
-
-      // Accumulate tokens
-      totalArchitectTokens += e.architectTokens ?? 0;
-      totalBuilderTokens += e.builderTokens ?? 0;
-      totalCriticTokens += e.criticTokens ?? 0;
-    }
+    // Summary (computed from filtered entries)
+    const summary = computeFilteredSummary(entries);
 
     // Field projection
     const fieldList = query.fields?.split(',');
@@ -160,23 +184,7 @@ export function registerMetasRoutes(
       return projected;
     });
 
-    return {
-      summary: {
-        total: entries.length,
-        stale: staleCount,
-        errors: errorCount,
-        neverSynthesized: neverSynthCount,
-        stalestPath,
-        lastSynthesizedPath,
-        lastSynthesizedAt,
-        tokens: {
-          architect: totalArchitectTokens,
-          builder: totalBuilderTokens,
-          critic: totalCriticTokens,
-        },
-      },
-      metas,
-    };
+    return { summary, metas };
   });
 
   app.get<{ Params: { path: string } }>(

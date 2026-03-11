@@ -11,10 +11,7 @@ import type { Logger } from 'pino';
 import { listMetas } from '../discovery/index.js';
 import type { SynthesisQueue } from '../queue/index.js';
 import type { RuleRegistrar } from '../rules/index.js';
-import {
-  computeEffectiveStaleness,
-  selectCandidate,
-} from '../scheduling/index.js';
+import { discoverStalestPath } from '../scheduling/index.js';
 import type { ServiceConfig } from '../schema/config.js';
 import type { HttpWatcherClient } from '../watcher-client/index.js';
 
@@ -178,22 +175,14 @@ export class Scheduler {
   private async discoverStalest(): Promise<string | null> {
     try {
       const result = await listMetas(this.config, this.watcher);
-      const candidates = result.entries
+      const stale = result.entries
         .filter((e) => e.stalenessSeconds > 0)
         .map((e) => ({
           node: e.node,
           meta: e.meta,
           actualStaleness: e.stalenessSeconds,
         }));
-
-      const weighted = computeEffectiveStaleness(
-        candidates,
-        this.config.depthWeight,
-      );
-      const winner = selectCandidate(weighted);
-
-      if (!winner) return null;
-      return winner.node.metaPath;
+      return discoverStalestPath(stale, this.config.depthWeight);
     } catch (err) {
       this.logger.warn({ err }, 'Failed to discover stalest candidate');
       return null;

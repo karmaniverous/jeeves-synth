@@ -8,10 +8,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
 import { listMetas } from '../discovery/index.js';
-import {
-  computeEffectiveStaleness,
-  selectCandidate,
-} from '../scheduling/index.js';
+import { discoverStalestPath } from '../scheduling/index.js';
 import type { RouteDeps } from './index.js';
 
 const synthesizeBodySchema = z.object({
@@ -41,25 +38,21 @@ export function registerSynthesizeRoute(
           message: 'Watcher unreachable — cannot discover candidates',
         });
       }
-      const candidates = result.entries
+      const stale = result.entries
         .filter((e) => e.stalenessSeconds > 0)
         .map((e) => ({
           node: e.node,
           meta: e.meta,
           actualStaleness: e.stalenessSeconds,
         }));
-      const weighted = computeEffectiveStaleness(
-        candidates,
-        config.depthWeight,
-      );
-      const winner = selectCandidate(weighted);
-      if (!winner) {
+      const stalest = discoverStalestPath(stale, config.depthWeight);
+      if (!stalest) {
         return reply.code(200).send({
           status: 'skipped',
           message: 'No stale metas found. Nothing to synthesize.',
         });
       }
-      targetPath = winner.node.metaPath;
+      targetPath = stalest;
     }
 
     const result = queue.enqueue(targetPath, body.path !== undefined);

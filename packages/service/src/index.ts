@@ -139,6 +139,9 @@ export {
 // ── Rules ──
 export { RuleRegistrar } from './rules/index.js';
 
+// ── Sleep ──
+export { sleep } from './sleep.js';
+
 // ── Server ──
 export type { ServerOptions } from './server.js';
 export { createServer } from './server.js';
@@ -318,7 +321,7 @@ export async function startService(
   scheduler.start();
 
   // Rule registration (fire-and-forget with retries)
-  const registrar = new RuleRegistrar(config, logger);
+  const registrar = new RuleRegistrar(config, logger, watcher);
   scheduler.setRegistrar(registrar);
   void registrar.register();
 

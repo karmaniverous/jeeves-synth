@@ -13,6 +13,7 @@ import type {
   MetaSpawnOptions,
   MetaSpawnResult,
 } from '../interfaces/index.js';
+import { sleep } from '../sleep.js';
 
 const DEFAULT_POLL_INTERVAL_MS = 5000;
 const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes
@@ -25,11 +26,6 @@ export interface GatewayExecutorOptions {
   apiKey?: string;
   /** Polling interval in ms. Default: 5000. */
   pollIntervalMs?: number;
-}
-
-/** Sleep helper. */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /** Response shape from /tools/invoke. */

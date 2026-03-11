@@ -14,6 +14,7 @@ import type {
   ScanResponse,
   WatcherClient,
 } from '../interfaces/index.js';
+import { sleep } from '../sleep.js';
 
 /** Default retry configuration. */
 const DEFAULT_MAX_RETRIES = 3;
@@ -30,11 +31,6 @@ export interface HttpWatcherClientOptions {
   backoffBaseMs?: number;
   /** Multiplier for backoff. Default: 4 (1s, 4s, 16s). */
   backoffFactor?: number;
-}
-
-/** Sleep for a given number of milliseconds. */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /** Check if an error is transient (worth retrying). */

@@ -6,7 +6,10 @@
  * @module scheduling/selectCandidate
  */
 
-import type { StalenessCandidate } from './weightedFormula.js';
+import {
+  computeEffectiveStaleness,
+  type StalenessCandidate,
+} from './weightedFormula.js';
 
 /**
  * Select the candidate with the highest effective staleness.
@@ -27,4 +30,23 @@ export function selectCandidate(
   }
 
   return best;
+}
+
+/**
+ * Extract stale candidates from a list and return the stalest path.
+ *
+ * Consolidates the repeated pattern of:
+ *   filter → computeEffectiveStaleness → selectCandidate → return path
+ *
+ * @param candidates - Array with node, meta, and stalenessSeconds.
+ * @param depthWeight - Depth weighting exponent from config.
+ * @returns The stalest candidate's metaPath, or null if none are stale.
+ */
+export function discoverStalestPath(
+  candidates: Omit<StalenessCandidate, 'effectiveStaleness'>[],
+  depthWeight: number,
+): string | null {
+  const weighted = computeEffectiveStaleness(candidates, depthWeight);
+  const winner = selectCandidate(weighted);
+  return winner?.node.metaPath ?? null;
 }

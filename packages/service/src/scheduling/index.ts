@@ -4,7 +4,7 @@
  * @module scheduling
  */
 
-export { selectCandidate } from './selectCandidate.js';
+export { discoverStalestPath, selectCandidate } from './selectCandidate.js';
 export {
   actualStaleness,
   computeStalenessScore,

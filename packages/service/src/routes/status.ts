@@ -57,23 +57,15 @@ export function registerStatusRoute(
       status = 'idle';
     }
 
-    // Metas summary (best-effort)
+    // Metas summary from listMetas (already computed)
     let metasSummary = { total: 0, stale: 0, errors: 0, neverSynthesized: 0 };
     try {
       const result = await listMetas(config, watcher);
-      let stale = 0;
-      let errors = 0;
-      let neverSynthesized = 0;
-      for (const e of result.entries) {
-        if (e.stalenessSeconds > 0) stale++;
-        if (e.hasError) errors++;
-        if (e.stalenessSeconds === Infinity) neverSynthesized++;
-      }
       metasSummary = {
-        total: result.entries.length,
-        stale,
-        errors,
-        neverSynthesized,
+        total: result.summary.total,
+        stale: result.summary.stale,
+        errors: result.summary.errors,
+        neverSynthesized: result.summary.neverSynthesized,
       };
     } catch {
       // Watcher unreachable — leave zeros
