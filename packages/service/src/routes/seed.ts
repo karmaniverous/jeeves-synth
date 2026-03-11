@@ -1,7 +1,7 @@
 /**
  * POST /seed — create a .meta/ directory with an empty meta.json.
  *
- * @module routes/seed
+ * Module: routes/seed
  */
 
 import { randomUUID } from 'node:crypto';

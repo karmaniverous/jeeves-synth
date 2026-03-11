@@ -1,7 +1,7 @@
 /**
  * Paginated scan helper for exhaustive scope enumeration.
  *
- * @module paginatedScan
+ * Module: paginatedScan
  */
 
 import type {

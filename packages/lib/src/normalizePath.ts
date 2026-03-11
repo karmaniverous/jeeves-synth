@@ -5,7 +5,7 @@
  * ensures all paths in the library use the same convention, regardless of
  * the platform's native separator.
  *
- * @module normalizePath
+ * Module: normalizePath
  */
 
 /**

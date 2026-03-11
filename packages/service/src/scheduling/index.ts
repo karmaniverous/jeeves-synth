@@ -1,7 +1,7 @@
 /**
  * Scheduling module — staleness detection and candidate selection.
  *
- * @module scheduling
+ * Module: scheduling
  */
 
 export { selectCandidate } from './selectCandidate.js';

@@ -1,7 +1,7 @@
 /**
  * GET /preview — dry-run synthesis preview.
  *
- * @module routes/preview
+ * Module: routes/preview
  */
 
 import type { FastifyInstance } from 'fastify';

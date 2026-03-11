@@ -1,7 +1,7 @@
 /**
  * Prune old archive snapshots beyond maxArchive.
  *
- * @module archive/prune
+ * Module: archive/prune
  */
 
 import { unlinkSync } from 'node:fs';

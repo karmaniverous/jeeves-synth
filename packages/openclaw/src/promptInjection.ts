@@ -4,7 +4,7 @@
  * Queries the watcher API for synthesis entity stats and produces
  * a Markdown section suitable for agent system prompt injection.
  *
- * @module promptInjection
+ * Module: promptInjection
  */
 
 import {

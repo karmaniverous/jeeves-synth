@@ -1,7 +1,7 @@
 /**
  * Discovery module — glob .meta/ directories and build ownership tree.
  *
- * @module discovery
+ * Module: discovery
  */
 
 export { buildMetaFilter, discoverMetas } from './discoverMetas.js';

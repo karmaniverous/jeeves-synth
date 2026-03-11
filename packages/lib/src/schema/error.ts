@@ -1,7 +1,7 @@
 /**
  * Structured error from a synthesis step failure.
  *
- * @module schema/error
+ * Module: schema/error
  */
 
 import { z } from 'zod';

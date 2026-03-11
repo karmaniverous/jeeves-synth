@@ -3,7 +3,7 @@
  *
  * Picks the meta with highest effective staleness.
  *
- * @module scheduling/selectCandidate
+ * Module: scheduling/selectCandidate
  */
 
 import type { StalenessCandidate } from './weightedFormula.js';

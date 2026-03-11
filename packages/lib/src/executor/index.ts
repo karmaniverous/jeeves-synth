@@ -1,7 +1,7 @@
 /**
  * Re-exports for the executor module.
  *
- * @module executor
+ * Module: executor
  */
 
 export {

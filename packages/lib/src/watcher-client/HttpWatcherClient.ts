@@ -4,7 +4,7 @@
  * Talks to jeeves-watcher's POST /scan and POST /rules endpoints
  * with retry and exponential backoff.
  *
- * @module watcher-client/HttpWatcherClient
+ * Module: watcher-client/HttpWatcherClient
  */
 
 import type {

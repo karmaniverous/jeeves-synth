@@ -1,7 +1,7 @@
 /**
  * Config loader — re-exports from the library package.
  *
- * @module configLoader
+ * Module: configLoader
  */
 
 export { loadMetaConfig } from '@karmaniverous/jeeves-meta';

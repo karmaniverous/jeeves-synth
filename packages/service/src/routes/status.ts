@@ -1,7 +1,7 @@
 /**
  * GET /status — service health and status overview.
  *
- * @module routes/status
+ * Module: routes/status
  */
 
 import type { FastifyInstance } from 'fastify';

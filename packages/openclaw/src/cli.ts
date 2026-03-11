@@ -13,7 +13,7 @@
  *   - OPENCLAW_HOME env var (path to .openclaw directory)
  *   - Default: ~/.openclaw/openclaw.json
  *
- * @module cli
+ * Module: cli
  */
 
 import {

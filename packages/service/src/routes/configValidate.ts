@@ -1,7 +1,7 @@
 /**
  * GET /config/validate — return sanitized service configuration.
  *
- * @module routes/configValidate
+ * Module: routes/configValidate
  */
 
 import type { FastifyInstance } from 'fastify';

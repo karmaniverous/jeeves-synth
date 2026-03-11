@@ -3,7 +3,7 @@
  *
  * effectiveStaleness = actualStaleness * (normalizedDepth + 1) ^ (depthWeight * emphasis)
  *
- * @module scheduling/weightedFormula
+ * Module: scheduling/weightedFormula
  */
 
 import type { MetaNode } from '../discovery/index.js';

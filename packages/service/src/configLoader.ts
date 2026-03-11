@@ -3,7 +3,7 @@
  *
  * Supports \@file: indirection and environment-variable substitution (dollar-brace pattern).
  *
- * @module configLoader
+ * Module: configLoader
  */
 
 import { readFileSync } from 'node:fs';

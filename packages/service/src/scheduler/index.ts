@@ -2,7 +2,7 @@
  * Croner-based scheduler that discovers the stalest meta candidate each tick
  * and enqueues it for synthesis.
  *
- * @module scheduler
+ * Module: scheduler
  */
 
 import { Cron } from 'croner';

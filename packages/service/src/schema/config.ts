@@ -3,7 +3,7 @@
  *
  * The service config is a strict superset of the core (library-compatible) meta config.
  *
- * @module schema/config
+ * Module: schema/config
  */
 
 import { z } from 'zod';

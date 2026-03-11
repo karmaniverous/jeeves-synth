@@ -1,7 +1,7 @@
 /**
  * POST /synthesize route handler.
  *
- * @module routes/synthesize
+ * Module: routes/synthesize
  */
 
 import type { FastifyInstance } from 'fastify';

@@ -2,7 +2,7 @@
  * GET /metas — list metas with optional filters.
  * GET /metas/:path — single meta detail.
  *
- * @module routes/metas
+ * Module: routes/metas
  */
 
 import type { FastifyInstance } from 'fastify';

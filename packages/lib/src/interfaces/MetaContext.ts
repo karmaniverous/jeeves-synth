@@ -4,7 +4,7 @@
  * Shared inputs that multiple subprocesses need are computed once
  * and serialized into each subprocess's task prompt.
  *
- * @module interfaces/MetaContext
+ * Module: interfaces/MetaContext
  */
 
 /**

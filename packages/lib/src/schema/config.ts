@@ -4,7 +4,7 @@
  * Consumers load config however they want (file, env, constructor).
  * The library validates via this schema.
  *
- * @module schema/config
+ * Module: schema/config
  */
 
 import { z } from 'zod';

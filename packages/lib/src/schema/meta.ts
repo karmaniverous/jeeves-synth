@@ -4,7 +4,7 @@
  * Reserved properties are underscore-prefixed and engine-managed.
  * All other keys are open schema (builder output).
  *
- * @module schema/meta
+ * Module: schema/meta
  */
 
 import { z } from 'zod';

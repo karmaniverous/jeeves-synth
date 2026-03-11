@@ -1,7 +1,7 @@
 /**
  * Route registration for jeeves-meta service.
  *
- * @module routes
+ * Module: routes
  */
 
 import type { FastifyInstance } from 'fastify';

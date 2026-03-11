@@ -1,7 +1,7 @@
 /**
  * Re-exports for all schema modules.
  *
- * @module schema
+ * Module: schema
  */
 
 export { type MetaConfig, metaConfigSchema } from './config.js';

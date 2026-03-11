@@ -5,7 +5,7 @@
  * - Builder: returns JSON \> _content + structured fields
  * - Critic: returns text \> _feedback
  *
- * @module orchestrator/parseOutput
+ * Module: orchestrator/parseOutput
  */
 
 /** Parsed builder output. */

@@ -1,7 +1,7 @@
 /**
  * Archive module — snapshot creation, pruning, and reading.
  *
- * @module archive
+ * Module: archive
  */
 
 export { listArchiveFiles } from './listArchive.js';

@@ -1,7 +1,7 @@
 /**
  * Tests for the TOOLS.md upsert logic.
  *
- * @module toolsWriter.test
+ * Module: toolsWriter.test
  */
 
 import { describe, expect, it } from 'vitest';

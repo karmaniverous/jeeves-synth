@@ -1,7 +1,7 @@
 /**
  * Tests for watcher-based meta discovery.
  *
- * @module discovery/discoverMetas.test
+ * Module: discovery/discoverMetas.test
  */
 
 import { describe, expect, it, vi } from 'vitest';

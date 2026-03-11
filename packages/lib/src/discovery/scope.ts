@@ -4,7 +4,7 @@
  * A meta owns: parent dir + all descendants, minus child .meta/ subtrees.
  * For child subtrees, it consumes the child's .meta/meta.json as a rollup input.
  *
- * @module discovery/scope
+ * Module: discovery/scope
  */
 
 import type { MetaNode } from './types.js';

@@ -2,7 +2,7 @@
  * Rollup configuration for the OpenClaw plugin package.
  * Two entry points: plugin (ESM + declarations) and CLI (ESM executable).
  *
- * @module rollup.config
+ * Module: rollup.config
  */
 
 import typescriptPlugin from '@rollup/plugin-typescript';
