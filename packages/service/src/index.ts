@@ -101,6 +101,9 @@ export {
   serviceConfigSchema,
 } from './schema/index.js';
 
+// ── Routes ──
+export { registerRoutes, type RouteDeps } from './routes/index.js';
+
 // ── Server ──
 export type { ServerOptions } from './server.js';
 export { createServer } from './server.js';
@@ -127,7 +130,7 @@ export async function startService(config: ServiceConfig): Promise<void> {
     file: config.logging.file,
   });
 
-  const server = createServer({ logger });
+  const server = createServer({ logger, config });
 
   try {
     await server.listen({ port: config.port, host: '0.0.0.0' });
