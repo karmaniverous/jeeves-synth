@@ -20,7 +20,9 @@ const seedBodySchema = z.object({
 export function registerSeedRoute(app: FastifyInstance, deps: RouteDeps): void {
   app.post('/seed', (request, reply) => {
     const body = seedBodySchema.parse(request.body);
-    const metaDir = join(body.path, '.meta');
+    const metaDir = body.path.endsWith('.meta')
+      ? body.path
+      : join(body.path, '.meta');
 
     if (existsSync(metaDir)) {
       return reply.status(409).send({

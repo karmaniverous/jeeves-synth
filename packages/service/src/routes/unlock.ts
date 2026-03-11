@@ -22,7 +22,10 @@ export function registerUnlockRoute(
 ): void {
   app.post('/unlock', (request, reply) => {
     const body = unlockBodySchema.parse(request.body);
-    const lockPath = join(body.path, '.meta', '.lock');
+    const metaDir = body.path.endsWith('.meta')
+      ? body.path
+      : join(body.path, '.meta');
+    const lockPath = join(metaDir, '.lock');
 
     if (!existsSync(lockPath)) {
       return reply.status(409).send({

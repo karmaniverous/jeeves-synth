@@ -11,7 +11,11 @@ import type { MetaServiceClient } from './serviceClient.js';
 
 interface StatusResponse {
   uptime: number;
-  queue: { length: number; current: unknown };
+  status: string;
+  dependencies: {
+    watcher: { status: string };
+    gateway: { status: string };
+  };
 }
 
 interface MetasResponse {
@@ -91,7 +95,14 @@ export async function generateMetaMenu(
       ')'
     : 'n/a';
 
-  void status; // used for future queue display
+  // Service status + dependency health
+  const depLines: string[] = [];
+  if (status.dependencies.watcher.status !== 'ok') {
+    depLines.push('> ⚠️ **Watcher**: ' + status.dependencies.watcher.status);
+  }
+  if (status.dependencies.gateway.status !== 'ok') {
+    depLines.push('> ⚠️ **Gateway**: ' + status.dependencies.gateway.status);
+  }
 
   return [
     'The jeeves-meta synthesis engine manages ' +
@@ -107,6 +118,7 @@ export async function generateMetaMenu(
     '| Never synthesized | ' + summary.neverSynthesized.toString() + ' |',
     '| Stalest | ' + stalestDisplay + ' |',
     '| Last synthesized | ' + lastSynthDisplay + ' |',
+    ...(depLines.length > 0 ? ['', '### Dependencies', ...depLines] : []),
     '',
     '### Token Usage (cumulative)',
     '| Step | Tokens |',

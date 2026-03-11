@@ -278,6 +278,33 @@ service.addCommand(
     }),
 );
 
+// start command (prints OS-specific start instructions)
+service.addCommand(
+  new Command('start')
+    .description('Print start instructions for the installed service')
+    .option('-n, --name <name>', 'Service name', 'JeevesMeta')
+    .action((options: { name: string }) => {
+      const { name } = options;
+
+      if (process.platform === 'win32') {
+        console.log('# NSSM start (Windows)');
+        console.log(`  nssm start ${name}`);
+        return;
+      }
+
+      if (process.platform === 'darwin') {
+        console.log('# launchd start (macOS)');
+        console.log(
+          `  launchctl load ~/Library/LaunchAgents/com.jeeves.meta.plist`,
+        );
+        return;
+      }
+
+      console.log('# systemd start (Linux)');
+      console.log(`  systemctl --user start ${name}.service`);
+    }),
+);
+
 // stop command
 service.addCommand(
   new Command('stop')
