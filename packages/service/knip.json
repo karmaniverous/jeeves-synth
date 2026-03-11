@@ -1,0 +1,21 @@
+{
+  "entry": [
+    "src/**/index.ts",
+    "src/cli.ts"
+  ],
+  "project": [
+    "*/**",
+    "!docs/**"
+  ],
+  "rules": {
+    "binaries": "off",
+    "devDependencies": "off",
+    "exports": "off",
+    "types": "off"
+  },
+  "vitest": {
+    "entry": [
+      "*/**/*.test.!(*.*)"
+    ]
+  }
+}

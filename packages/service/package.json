@@ -1,0 +1,76 @@
+{
+  "name": "@karmaniverous/jeeves-meta-service",
+  "version": "0.3.3",
+  "author": "Jason Williscroft",
+  "description": "Fastify HTTP service for the Jeeves Meta synthesis engine",
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/karmaniverous/jeeves-meta.git",
+    "directory": "packages/service"
+  },
+  "bugs": {
+    "url": "https://github.com/karmaniverous/jeeves-meta/issues"
+  },
+  "homepage": "https://github.com/karmaniverous/jeeves-meta#readme",
+  "keywords": [
+    "synthesis",
+    "knowledge",
+    "meta",
+    "jeeves",
+    "service",
+    "fastify",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "commander": "^14",
+    "croner": "^10",
+    "fastify": "^5.7",
+    "pino": "^10",
+    "zod": "^4.3"
+  },
+  "devDependencies": {
+    "@dotenvx/dotenvx": "^1.54.1",
+    "@rollup/plugin-commonjs": "^29.0.2",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/node": "^25.3.5",
+    "@vitest/coverage-v8": "^4.0.18",
+    "cross-env": "^10.1.0",
+    "knip": "^5.85.0",
+    "rollup": "^4.59.0",
+    "rollup-plugin-dts": "^6.3.0",
+    "tslib": "^2.8.1",
+    "vitest": "^4.0.18"
+  },
+  "scripts": {
+    "build": "rimraf dist && cross-env NO_COLOR=1 rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "knip": "knip",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "test": "vitest run",
+    "typecheck": "tsc"
+  },
+  "bin": {
+    "jeeves-meta": "./dist/cli/jeeves-meta/index.js"
+  }
+}
