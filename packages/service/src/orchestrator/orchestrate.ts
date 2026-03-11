@@ -17,13 +17,12 @@ import {
 } from '../archive/index.js';
 import { discoverMetas } from '../discovery/discoverMetas.js';
 import { buildOwnershipTree, findNode } from '../discovery/index.js';
-import { filterInScope, getScopePrefix } from '../discovery/scope.js';
+import { getScopePrefix } from '../discovery/scope.js';
 import type { MetaNode } from '../discovery/types.js';
 import { toMetaError } from '../errors.js';
 import type { MetaExecutor, WatcherClient } from '../interfaces/index.js';
 import { acquireLock, releaseLock } from '../lock.js';
 import { normalizePath } from '../normalizePath.js';
-import { paginatedScan } from '../paginatedScan.js';
 import type { ProgressEvent } from '../progress/index.js';
 import {
   actualStaleness,
@@ -229,19 +228,7 @@ async function orchestrateOnce(
     const architectPrompt = currentMeta._architect ?? config.defaultArchitect;
     const criticPrompt = currentMeta._critic ?? config.defaultCritic;
 
-    // Step 5: Structure hash
-    const scopePrefix = getScopePrefix(node);
-    const allScanFiles = await paginatedScan(watcher, {
-      pathPrefix: scopePrefix,
-    });
-    const allFilePaths = allScanFiles.map((f) => f.file_path);
-    // Structure hash uses scope-filtered files (excluding child subtrees)
-    // so changes in child scopes don't trigger parent architect re-runs
-    const scopeFiles = filterInScope(node, allFilePaths);
-    const newStructureHash = computeStructureHash(scopeFiles);
-    const structureChanged = newStructureHash !== currentMeta._structureHash;
-
-    // Step 6: Steer change detection
+    // Step 5-6: Steer change detection
     const latestArchive = readLatestArchive(node.metaPath);
     const steerChanged = hasSteerChanged(
       currentMeta._steer,
@@ -249,8 +236,12 @@ async function orchestrateOnce(
       Boolean(latestArchive),
     );
 
-    // Step 7: Compute context
+    // Step 7: Compute context (includes scope files and delta files)
     const ctx = await buildContextPackage(node, currentMeta, watcher);
+
+    // Step 5 (deferred): Structure hash from context scope files
+    const newStructureHash = computeStructureHash(ctx.scopeFiles);
+    const structureChanged = newStructureHash !== currentMeta._structureHash;
 
     // Step 8: Architect (conditional)
     const architectTriggered = isArchitectTriggered(

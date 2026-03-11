@@ -19,7 +19,6 @@ import { registerStatusRoute } from './status.js';
 import { registerSynthesizeRoute } from './synthesize.js';
 import { registerUnlockRoute } from './unlock.js';
 
-/** Dependencies injected into route handlers. */
 /** Runtime stats tracked by the service. */
 export interface ServiceStats {
   totalSyntheses: number;

@@ -281,10 +281,7 @@ export function registerMetasRoutes(
             : archiveFiles.length;
         const selected = archiveFiles.slice(-limit).reverse();
         response.archive = selected.map((af) => {
-          const raw = readFileSync(
-            join(targetNode.metaPath, 'archive', af),
-            'utf8',
-          );
+          const raw = readFileSync(af, 'utf8');
           return projectMeta(JSON.parse(raw) as Record<string, unknown>);
         });
       }
