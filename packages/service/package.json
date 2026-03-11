@@ -42,13 +42,11 @@
   },
   "dependencies": {
     "commander": "^14",
-    "croner": "^10",
     "fastify": "^5.7",
     "pino": "^10",
     "zod": "^4.3"
   },
   "devDependencies": {
-    "@dotenvx/dotenvx": "^1.54.1",
     "@rollup/plugin-commonjs": "^29.0.2",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",

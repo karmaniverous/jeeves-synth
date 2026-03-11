@@ -1,23 +1,15 @@
 /**
  * Zod schema for jeeves-meta service configuration.
  *
- * Extends lib config fields with service-specific settings.
+ * The service config is a strict superset of the core (library-compatible) meta config.
  *
  * @module schema/config
  */
 
 import { z } from 'zod';
 
-/** Zod schema for logging configuration. */
-const loggingSchema = z.object({
-  /** Log level. */
-  level: z.string().default('info'),
-  /** Optional file path for log output. */
-  file: z.string().optional(),
-});
-
-/** Zod schema for jeeves-meta service configuration. */
-export const serviceConfigSchema = z.object({
+/** Zod schema for the core (library-compatible) meta configuration. */
+export const metaConfigSchema = z.object({
   /** Watcher service base URL. */
   watcherUrl: z.url(),
 
@@ -67,9 +59,22 @@ export const serviceConfigSchema = z.object({
   metaArchiveProperty: z
     .record(z.string(), z.unknown())
     .default({ _meta: 'archive' }),
+});
 
-  // ── Service-specific fields ──
+/** Inferred type for core meta configuration. */
+export type MetaConfig = z.infer<typeof metaConfigSchema>;
 
+/** Zod schema for logging configuration. */
+const loggingSchema = z.object({
+  /** Log level. */
+  level: z.string().default('info'),
+
+  /** Optional file path for log output. */
+  file: z.string().optional(),
+});
+
+/** Zod schema for jeeves-meta service configuration (superset of MetaConfig). */
+export const serviceConfigSchema = metaConfigSchema.extend({
   /** HTTP port for the service (default: 1938). */
   port: z.number().int().min(1).max(65535).default(1938),
 
@@ -85,12 +90,3 @@ export const serviceConfigSchema = z.object({
 
 /** Inferred type for service configuration. */
 export type ServiceConfig = z.infer<typeof serviceConfigSchema>;
-
-/**
- * Alias for ServiceConfig — satisfies lib modules that reference MetaConfig.
- * ServiceConfig is a strict superset of the original MetaConfig.
- */
-export type MetaConfig = ServiceConfig;
-
-/** Alias for serviceConfigSchema — satisfies lib modules that reference metaConfigSchema. */
-export const metaConfigSchema = serviceConfigSchema;
