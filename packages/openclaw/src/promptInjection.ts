@@ -25,7 +25,7 @@ interface MetasResponse {
     lastSynthesizedAt: string | null;
     tokens: { architect: number; builder: number; critic: number };
   };
-  items: Array<{ stalenessSeconds: number | string }>;
+  metas: Array<{ stalenessSeconds: number | null }>;
 }
 
 /**
@@ -76,11 +76,8 @@ export async function generateMetaMenu(
 
   // Find stalest age
   let stalestAge = 0;
-  for (const item of metas.items) {
-    const s =
-      typeof item.stalenessSeconds === 'number'
-        ? item.stalenessSeconds
-        : Infinity;
+  for (const item of metas.metas) {
+    const s = item.stalenessSeconds !== null ? item.stalenessSeconds : Infinity;
     if (s > stalestAge) stalestAge = s;
   }
 
