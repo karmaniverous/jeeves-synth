@@ -247,6 +247,7 @@ export async function startService(
   // Wire queue processing — synthesize one meta per dequeue
   const synthesizeFn = async (path: string): Promise<void> => {
     const startMs = Date.now();
+    let cycleTokens = 0;
     await progress.report({
       type: 'synthesis_start',
       metaPath: path,
@@ -262,6 +263,7 @@ export async function startService(
           // Track token stats from phase completions
           if (evt.type === 'phase_complete' && evt.tokens) {
             stats.totalTokens += evt.tokens;
+            cycleTokens += evt.tokens;
           }
           await progress.report(evt);
         },
@@ -287,6 +289,7 @@ export async function startService(
         await progress.report({
           type: 'synthesis_complete',
           metaPath: path,
+          tokens: cycleTokens,
           durationMs,
         });
       }
