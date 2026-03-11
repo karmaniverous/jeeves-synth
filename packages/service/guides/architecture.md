@@ -10,7 +10,7 @@
 | `ProgressReporter` | Sends synthesis events to a channel via gateway `/tools/invoke` → `message` tool |
 | `RuleRegistrar` | Registers 3 virtual inference rules with watcher at startup |
 | `HttpWatcherClient` | Watcher HTTP client with 3-retry exponential backoff |
-| Fastify server | 7 route handlers for the HTTP API |
+| Fastify server | 8 route handlers for the HTTP API |
 | Config hot-reload | `fs.watchFile` monitors config for schedule/reportChannel/logging changes |
 | Shutdown handlers | SIGTERM/SIGINT → stop scheduler → release lock → close server |
 

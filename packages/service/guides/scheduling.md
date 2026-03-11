@@ -18,8 +18,8 @@ The built-in croner scheduler runs on the configured cron expression (default: e
 Each tick:
 1. Discover all metas via watcher scan
 2. Compute effective staleness for each
-3. Enqueue the stalest candidate
-4. Check watcher uptime for restart detection → re-register virtual rules if needed
+3. Enqueue the stalest candidate (if none found, increase backoff and return)
+4. Check watcher uptime for restart detection → re-register virtual rules if needed (only runs when a candidate was found)
 
 ## Adaptive Backoff
 

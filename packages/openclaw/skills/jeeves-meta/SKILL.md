@@ -80,7 +80,7 @@ Key settings:
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `watcherUrl` | (required) | Watcher service URL (e.g. `http://localhost:1936`) |
-| `gatewayUrl` | `http://127.0.0.1:3000` | OpenClaw gateway URL for subprocess spawning |
+| `gatewayUrl` | `http://127.0.0.1:18789` | OpenClaw gateway URL for subprocess spawning |
 | `gatewayApiKey` | (optional) | API key for gateway authentication |
 | `metaProperty` | `{ _meta: "current" }` | Watcher metadata properties applied to live `.meta/meta.json` files. `Record<string, unknown>` — any shape accepted. |
 | `metaArchiveProperty` | `{ _meta: "archive" }` | Watcher metadata properties applied to `.meta/archive/**` snapshots. Same shape flexibility. |
@@ -92,13 +92,12 @@ Key settings:
 | `builderTimeout` | 600s | Builder subprocess timeout |
 | `criticTimeout` | 300s | Critic subprocess timeout |
 | `skipUnchanged` | true | Skip candidates with no changes since last synthesis |
-| `batchSize` | 1 | Number of metas to synthesize per invocation |
 
 ### Meta Discovery
 
 Discovery is entirely watcher-based. The engine:
 
-1. **Registers virtual inference rules** at plugin startup. These rules match
+1. **Registers virtual inference rules** at service startup. These rules match
    file paths (`**/.meta/meta.json` and `**/.meta/archive/*.json`) and apply
    the configured `metaProperty`/`metaArchiveProperty` values as watcher
    metadata on those indexed points.
@@ -205,21 +204,39 @@ Before the synthesis engine can operate:
 
 ### Installation
 
-1. Install the OpenClaw plugin:
+1. Install and start the jeeves-meta service:
+
+```bash
+npm install -g @karmaniverous/jeeves-meta
+jeeves-meta start --config J:\config\jeeves-meta.config.json
+```
+
+2. Install the OpenClaw plugin:
 
 ```bash
 npx @karmaniverous/jeeves-meta-openclaw install
 ```
 
-2. Set the config path environment variable (in the gateway's environment):
+3. Configure the plugin with the service URL (in OpenClaw config):
 
+```json
+{
+  "plugins": {
+    "entries": {
+      "jeeves-meta-openclaw": {
+        "enabled": true,
+        "config": {
+          "serviceUrl": "http://127.0.0.1:1938"
+        }
+      }
+    }
+  }
+}
 ```
-JEEVES_META_CONFIG=J:\config\jeeves-meta.config.json
-```
 
-3. Restart the OpenClaw gateway to load the plugin.
+4. Restart the OpenClaw gateway to load the plugin.
 
-4. Verify: check that `## Meta` appears in TOOLS.md injection and
+5. Verify: check that `## Meta` appears in TOOLS.md injection and
    `jeeves-meta` appears in available skills.
 
 ### First Synthesis
@@ -230,19 +247,19 @@ JEEVES_META_CONFIG=J:\config\jeeves-meta.config.json
 4. Review: `meta_detail <path>` with `includeArchive: 1` — check output quality
 5. Iterate on `_steer` prompts if needed
 
-## Library CLI
+## Service CLI
 
-The library ships a CLI for non-plugin operation:
+The service package ships a CLI:
 
 ```bash
-npx @karmaniverous/jeeves-meta <command> [options]
+jeeves-meta <command> [options]
 ```
 
-Commands: `status`, `list`, `detail`, `preview`, `synthesize`, `seed`,
-`unlock`, `validate`, `config show`, `config check`.
+Commands: `start`, `status`, `list`, `detail`, `preview`, `synthesize`,
+`seed`, `unlock`, `validate`, `service install|start|stop|status|remove`.
 
 Config resolution: `--config` flag → `JEEVES_META_CONFIG` env var → error.
-All commands support `--json` for machine-readable output.
+All commands support `-p, --port` to specify the service port (default: 1938).
 
 ## Troubleshooting
 
