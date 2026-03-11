@@ -8,8 +8,14 @@
 import { Cron } from 'croner';
 import type { Logger } from 'pino';
 
+import { listMetas } from '../discovery/index.js';
 import type { SynthesisQueue } from '../queue/index.js';
+import {
+  computeEffectiveStaleness,
+  selectCandidate,
+} from '../scheduling/index.js';
 import type { ServiceConfig } from '../schema/config.js';
+import type { HttpWatcherClient } from '../watcher-client/index.js';
 
 const MAX_BACKOFF_MULTIPLIER = 4;
 
@@ -25,12 +31,19 @@ export class Scheduler {
   private readonly config: ServiceConfig;
   private readonly queue: SynthesisQueue;
   private readonly logger: Logger;
+  private readonly watcher: HttpWatcherClient;
   private currentExpression: string;
 
-  constructor(config: ServiceConfig, queue: SynthesisQueue, logger: Logger) {
+  constructor(
+    config: ServiceConfig,
+    queue: SynthesisQueue,
+    logger: Logger,
+    watcher: HttpWatcherClient,
+  ) {
     this.config = config;
     this.queue = queue;
     this.logger = logger;
+    this.watcher = watcher;
     this.currentExpression = config.schedule;
   }
 
@@ -113,13 +126,30 @@ export class Scheduler {
   }
 
   /**
-   * Discover the stalest meta candidate.
-   *
-   * Stub implementation — returns null. Real implementation will use
-   * HttpWatcherClient + discoverMetas + selectCandidate.
+   * Discover the stalest meta candidate via watcher.
    */
-  private discoverStalest(): Promise<string | null> {
-    this.logger.debug('Would discover stalest candidate');
-    return Promise.resolve(null);
+  private async discoverStalest(): Promise<string | null> {
+    try {
+      const result = await listMetas(this.config, this.watcher);
+      const candidates = result.entries
+        .filter((e) => e.stalenessSeconds > 0)
+        .map((e) => ({
+          node: e.node,
+          meta: e.meta,
+          actualStaleness: e.stalenessSeconds,
+        }));
+
+      const weighted = computeEffectiveStaleness(
+        candidates,
+        this.config.depthWeight,
+      );
+      const winner = selectCandidate(weighted);
+
+      if (!winner) return null;
+      return winner.node.metaPath;
+    } catch (err) {
+      this.logger.warn({ err }, 'Failed to discover stalest candidate');
+      return null;
+    }
   }
 }

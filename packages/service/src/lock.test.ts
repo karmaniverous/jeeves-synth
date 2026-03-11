@@ -2,9 +2,14 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { acquireLock, isLocked, releaseLock } from './lock.js';
+import {
+  acquireLock,
+  cleanupStaleLocks,
+  isLocked,
+  releaseLock,
+} from './lock.js';
 
 const testRoot = join(tmpdir(), `jeeves-meta-lock-${Date.now().toString()}`);
 const metaPath = join(testRoot, '.meta');
@@ -32,13 +37,21 @@ describe('acquireLock', () => {
     const staleDate = new Date(Date.now() - 31 * 60 * 1000).toISOString();
     writeFileSync(
       join(metaPath, '.lock'),
-      JSON.stringify({ pid: 99999, startedAt: staleDate }),
+      JSON.stringify({ _lockPid: 99999, _lockStartedAt: staleDate }),
     );
     expect(acquireLock(metaPath)).toBe(true);
   });
 
   it('overrides corrupt lock file', () => {
     writeFileSync(join(metaPath, '.lock'), 'not json');
+    expect(acquireLock(metaPath)).toBe(true);
+  });
+
+  it('overrides staged synthesis result (_id present)', () => {
+    writeFileSync(
+      join(metaPath, '.lock'),
+      JSON.stringify({ _id: 'abc', _generatedAt: new Date().toISOString() }),
+    );
     expect(acquireLock(metaPath)).toBe(true);
   });
 });
@@ -71,7 +84,7 @@ describe('isLocked', () => {
     const staleDate = new Date(Date.now() - 31 * 60 * 1000).toISOString();
     writeFileSync(
       join(metaPath, '.lock'),
-      JSON.stringify({ pid: 99999, startedAt: staleDate }),
+      JSON.stringify({ _lockPid: 99999, _lockStartedAt: staleDate }),
     );
     expect(isLocked(metaPath)).toBe(false);
   });
@@ -79,5 +92,49 @@ describe('isLocked', () => {
   it('returns false when lock is corrupt', () => {
     writeFileSync(join(metaPath, '.lock'), 'garbage');
     expect(isLocked(metaPath)).toBe(false);
+  });
+
+  it('returns false when lock is staged result', () => {
+    writeFileSync(
+      join(metaPath, '.lock'),
+      JSON.stringify({ _id: 'abc', _generatedAt: new Date().toISOString() }),
+    );
+    expect(isLocked(metaPath)).toBe(false);
+  });
+});
+
+describe('cleanupStaleLocks', () => {
+  it('removes PID-only lock files', () => {
+    writeFileSync(
+      join(metaPath, '.lock'),
+      JSON.stringify({
+        _lockPid: 99999,
+        _lockStartedAt: new Date().toISOString(),
+      }),
+    );
+    const logger = { warn: vi.fn() };
+    cleanupStaleLocks([metaPath], logger);
+    expect(existsSync(join(metaPath, '.lock'))).toBe(false);
+    expect(logger.warn).toHaveBeenCalled();
+  });
+
+  it('removes staged synthesis lock files with warning', () => {
+    writeFileSync(
+      join(metaPath, '.lock'),
+      JSON.stringify({ _id: 'abc', _generatedAt: new Date().toISOString() }),
+    );
+    const logger = { warn: vi.fn() };
+    cleanupStaleLocks([metaPath], logger);
+    expect(existsSync(join(metaPath, '.lock'))).toBe(false);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({ metaPath }),
+      expect.stringContaining('staged synthesis result'),
+    );
+  });
+
+  it('no-ops when no lock exists', () => {
+    const logger = { warn: vi.fn() };
+    cleanupStaleLocks([metaPath], logger);
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 });

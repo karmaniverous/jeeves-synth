@@ -218,7 +218,7 @@ describe('orchestrate', () => {
     // Write a fresh lock
     writeFileSync(
       join(testRoot, 'domain/.meta/.lock'),
-      JSON.stringify({ pid: 99999, startedAt: new Date().toISOString() }),
+      JSON.stringify({ _lockPid: 99999, _lockStartedAt: new Date().toISOString() }),
     );
 
     const metaJsonPath =

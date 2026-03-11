@@ -9,6 +9,12 @@ describe('resolveConfigPath', () => {
     ).toBe('/path/to/config.json');
   });
 
+  it('returns -c short flag value when present', () => {
+    expect(resolveConfigPath(['start', '-c', '/path/to/config.json'])).toBe(
+      '/path/to/config.json',
+    );
+  });
+
   it('returns --config flag even with other args', () => {
     expect(
       resolveConfigPath([

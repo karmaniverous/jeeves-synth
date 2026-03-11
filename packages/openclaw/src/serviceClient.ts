@@ -69,9 +69,10 @@ export class MetaServiceClient {
     return this.get(`/metas/${encoded}${qs}`);
   }
 
-  /** POST /preview — dry-run next synthesis candidate. */
+  /** GET /preview — dry-run next synthesis candidate. */
   public async preview(path?: string): Promise<unknown> {
-    return this.post('/preview', path ? { path } : {});
+    const qs = path ? '?path=' + encodeURIComponent(path) : '';
+    return this.get('/preview' + qs);
   }
 
   /** POST /synthesize — enqueue synthesis. */

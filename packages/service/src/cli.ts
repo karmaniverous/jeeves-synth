@@ -21,7 +21,7 @@ program
   .action(async (opts: { config: string }) => {
     const configPath = resolveConfigPath(['-c', opts.config]);
     const config = loadServiceConfig(configPath);
-    await startService(config);
+    await startService(config, configPath);
   });
 
 // ─── API client helpers ─────────────────────────────────────────────
@@ -109,8 +109,8 @@ program
   .option('--path <path>', 'Specific meta path to preview')
   .action(async (opts: { port: string; path?: string }) => {
     try {
-      const body = opts.path ? { path: opts.path } : {};
-      const data = await apiPost(parseInt(opts.port, 10), '/preview', body);
+      const qs = opts.path ? '?path=' + encodeURIComponent(opts.path) : '';
+      const data = await apiGet(parseInt(opts.port, 10), '/preview' + qs);
       console.log(JSON.stringify(data, null, 2));
     } catch (err) {
       console.error('Error:', (err as Error).message);

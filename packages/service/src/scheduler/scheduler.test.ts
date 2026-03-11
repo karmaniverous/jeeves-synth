@@ -2,6 +2,7 @@ import type { Logger } from 'pino';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SynthesisQueue } from '../queue/index.js';
+import type { HttpWatcherClient } from '../watcher-client/index.js';
 import { Scheduler } from './index.js';
 
 function createTestLogger() {
@@ -40,15 +41,24 @@ function createTestConfig() {
   };
 }
 
+function createMockWatcher() {
+  return {
+    scan: vi.fn().mockResolvedValue({ points: [], next_page_offset: null }),
+    registerRules: vi.fn().mockResolvedValue(undefined),
+  } as unknown as HttpWatcherClient;
+}
+
 describe('Scheduler', () => {
   let scheduler: Scheduler;
   let queue: SynthesisQueue;
   let logger: Logger;
+  let watcher: HttpWatcherClient;
 
   beforeEach(() => {
     logger = createTestLogger();
     queue = new SynthesisQueue(logger);
-    scheduler = new Scheduler(createTestConfig(), queue, logger);
+    watcher = createMockWatcher();
+    scheduler = new Scheduler(createTestConfig(), queue, logger, watcher);
   });
 
   afterEach(() => {
@@ -75,17 +85,13 @@ describe('Scheduler', () => {
     expect(scheduler.nextRunAt).toBeNull();
   });
 
-  it('tick is a no-op when stub returns null', async () => {
+  it('tick finds no candidates when watcher returns empty', async () => {
     scheduler.start();
 
-    // Manually invoke tick via the private method.
     await (scheduler as unknown as { tick: () => Promise<void> }).tick();
 
-    // Queue should remain empty since discoverStalest returns null.
+    // Queue should remain empty since no metas discovered.
     expect(queue.depth).toBe(0);
-    expect(logger.debug).toHaveBeenCalledWith(
-      'Would discover stalest candidate',
-    );
   });
 
   it('updateSchedule changes the schedule', () => {
