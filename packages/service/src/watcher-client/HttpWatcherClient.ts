@@ -20,7 +20,7 @@ import { sleep } from '../sleep.js';
 const DEFAULT_MAX_RETRIES = 3;
 const DEFAULT_BACKOFF_BASE_MS = 1000;
 const DEFAULT_BACKOFF_FACTOR = 4;
-const DEFAULT_TIMEOUT_MS = 10_000;
+const DEFAULT_TIMEOUT_MS = 30_000;
 
 /** Options for creating an HttpWatcherClient. */
 export interface HttpWatcherClientOptions {
