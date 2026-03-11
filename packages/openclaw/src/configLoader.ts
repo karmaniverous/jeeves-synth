@@ -4,4 +4,4 @@
  * @module configLoader
  */
 
-export { loadSynthConfig } from '@karmaniverous/jeeves-meta';
+export { loadMetaConfig } from '@karmaniverous/jeeves-meta';

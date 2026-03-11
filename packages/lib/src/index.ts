@@ -10,7 +10,7 @@ export {
   pruneArchive,
   readLatestArchive,
 } from './archive/index.js';
-export { loadSynthConfig, resolveConfigPath } from './configLoader.js';
+export { loadMetaConfig, resolveConfigPath } from './configLoader.js';
 export {
   buildMetaFilter,
   buildOwnershipTree,
@@ -26,20 +26,20 @@ export {
   type OwnershipTree,
 } from './discovery/index.js';
 export { computeEma } from './ema.js';
-export { toSynthError } from './errors.js';
+export { toMetaError } from './errors.js';
 export {
   GatewayExecutor,
   type GatewayExecutorOptions,
 } from './executor/index.js';
 export type {
   InferenceRuleSpec,
+  MetaContext,
+  MetaExecutor,
+  MetaSpawnOptions,
+  MetaSpawnResult,
   ScanFile,
   ScanParams,
   ScanResponse,
-  SynthContext,
-  SynthExecutor,
-  SynthSpawnOptions,
-  SynthSpawnResult,
   WatcherClient,
 } from './interfaces/index.js';
 export { acquireLock, isLocked, releaseLock } from './lock.js';
@@ -69,12 +69,12 @@ export {
   type StalenessCandidate,
 } from './scheduling/index.js';
 export {
+  type MetaConfig,
+  metaConfigSchema,
+  type MetaError,
+  metaErrorSchema,
   type MetaJson,
   metaJsonSchema,
-  type SynthConfig,
-  synthConfigSchema,
-  type SynthError,
-  synthErrorSchema,
 } from './schema/index.js';
 export { computeStructureHash } from './structureHash.js';
 export {

@@ -10,7 +10,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { type SynthConfig } from '@karmaniverous/jeeves-meta';
+import { type MetaConfig } from '@karmaniverous/jeeves-meta';
 
 import type { PluginApi } from './helpers.js';
 import { generateMetaMenu } from './promptInjection.js';
@@ -99,7 +99,7 @@ export function upsertMetaSection(existing: string, metaMenu: string): string {
  */
 async function refreshToolsMd(
   api: PluginApi,
-  config: SynthConfig,
+  config: MetaConfig,
 ): Promise<boolean> {
   const menu = await generateMetaMenu(config);
 
@@ -135,7 +135,7 @@ async function refreshToolsMd(
  * @param api - Plugin API.
  * @param watcherUrl - Watcher API base URL.
  */
-export function startToolsWriter(api: PluginApi, config: SynthConfig): void {
+export function startToolsWriter(api: PluginApi, config: MetaConfig): void {
   // Deferred initial write
   setTimeout(() => {
     refreshToolsMd(api, config).catch((err: unknown) => {

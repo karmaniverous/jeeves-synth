@@ -6,8 +6,8 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { WatcherClient } from '../interfaces/index.js';
-import type { SynthExecutor } from '../interfaces/index.js';
-import type { MetaJson, SynthConfig } from '../schema/index.js';
+import type { MetaExecutor } from '../interfaces/index.js';
+import type { MetaConfig, MetaJson } from '../schema/index.js';
 import { orchestrate } from './orchestrate.js';
 
 const testRoot = join(
@@ -15,7 +15,7 @@ const testRoot = join(
   `jeeves-meta-orch-int-${Date.now().toString()}`,
 );
 
-const config: SynthConfig = {
+const config: MetaConfig = {
   watcherUrl: 'http://localhost:3456',
   gatewayUrl: 'http://127.0.0.1:3000',
   depthWeight: 1,
@@ -25,6 +25,7 @@ const config: SynthConfig = {
   architectTimeout: 120,
   builderTimeout: 600,
   criticTimeout: 300,
+  thinking: 'low',
   defaultArchitect: 'You are the architect.',
   defaultCritic: 'You are the critic.',
   skipUnchanged: true,
@@ -71,7 +72,7 @@ function createMockWatcher(
   };
 }
 
-function createMockExecutor(responses?: Record<string, string>): SynthExecutor {
+function createMockExecutor(responses?: Record<string, string>): MetaExecutor {
   let callIndex = 0;
   const defaultResponses = [
     'Analyze the data and produce a synthesis.',
@@ -192,7 +193,7 @@ describe('orchestrate', () => {
     const metaJsonPath =
       testRoot.replaceAll('\\', '/') + '/domain/.meta/meta.json';
     const watcher = createMockWatcher(['test-file.md'], [metaJsonPath]);
-    const executor: SynthExecutor = {
+    const executor: MetaExecutor = {
       spawn: vi.fn().mockImplementation((task: string) => {
         if (task.includes('TASK BRIEF')) {
           return Promise.reject(new Error('Builder timed out'));

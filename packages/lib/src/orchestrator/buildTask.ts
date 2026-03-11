@@ -4,14 +4,14 @@
  * @module orchestrator/buildTask
  */
 
-import type { SynthContext } from '../interfaces/index.js';
-import type { MetaJson, SynthConfig } from '../schema/index.js';
+import type { MetaContext } from '../interfaces/index.js';
+import type { MetaConfig, MetaJson } from '../schema/index.js';
 import { condenseScopeFiles } from './contextPackage.js';
 
 /** Append optional context sections shared across all step prompts. */
 function appendSharedSections(
   sections: string[],
-  ctx: SynthContext,
+  ctx: MetaContext,
   options?: {
     includeSteer?: boolean;
     includePreviousContent?: boolean;
@@ -61,9 +61,9 @@ function appendSharedSections(
  * @returns The architect task prompt string.
  */
 export function buildArchitectTask(
-  ctx: SynthContext,
+  ctx: MetaContext,
   meta: MetaJson,
-  config: SynthConfig,
+  config: MetaConfig,
 ): string {
   const sections = [
     meta._architect ?? config.defaultArchitect,
@@ -105,9 +105,9 @@ export function buildArchitectTask(
  * @returns The builder task prompt string.
  */
 export function buildBuilderTask(
-  ctx: SynthContext,
+  ctx: MetaContext,
   meta: MetaJson,
-  config: SynthConfig,
+  config: MetaConfig,
 ): string {
   const sections = [
     '## TASK BRIEF (from Architect)',
@@ -144,9 +144,9 @@ export function buildBuilderTask(
  * @returns The critic task prompt string.
  */
 export function buildCriticTask(
-  ctx: SynthContext,
+  ctx: MetaContext,
   meta: MetaJson,
-  config: SynthConfig,
+  config: MetaConfig,
 ): string {
   const sections = [
     meta._critic ?? config.defaultCritic,

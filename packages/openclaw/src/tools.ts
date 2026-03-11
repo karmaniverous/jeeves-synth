@@ -1,5 +1,5 @@
 /**
- * Synth tool registrations for OpenClaw.
+ * Meta tool registrations for OpenClaw.
  *
  * @module tools
  */
@@ -21,7 +21,7 @@ import {
   selectCandidate,
 } from '@karmaniverous/jeeves-meta';
 
-import { loadSynthConfig } from './configLoader.js';
+import { loadMetaConfig } from './configLoader.js';
 import {
   fail,
   getConfigPath,
@@ -30,16 +30,16 @@ import {
   type ToolResult,
 } from './helpers.js';
 
-/** Register all synth_* tools. */
-export function registerSynthTools(api: PluginApi): void {
+/** Register all meta_* tools. */
+export function registerMetaTools(api: PluginApi): void {
   const configPath = getConfigPath(api);
 
   // Lazy-load config (resolved once on first use)
-  let _config: ReturnType<typeof loadSynthConfig> | null = null;
+  let _config: ReturnType<typeof loadMetaConfig> | null = null;
 
   const getConfig = () => {
     if (!_config) {
-      _config = loadSynthConfig(configPath);
+      _config = loadMetaConfig(configPath);
     }
     return _config;
   };
@@ -50,11 +50,11 @@ export function registerSynthTools(api: PluginApi): void {
   /** Create a watcher client. */
   const getWatcher = () => new HttpWatcherClient({ baseUrl: getWatcherUrl() });
 
-  // ─── synth_list ──────────────────────────────────────────────
+  // ─── meta_list ──────────────────────────────────────────────
   api.registerTool({
-    name: 'synth_list',
+    name: 'meta_list',
     description:
-      'List metas with summary stats and per-meta projection. Replaces synth_status + synth_entities.',
+      'List metas with summary stats and per-meta projection. Replaces meta_status + meta_entities.',
     parameters: {
       type: 'object',
       properties: {
@@ -219,9 +219,9 @@ export function registerSynthTools(api: PluginApi): void {
     },
   });
 
-  // ─── synth_detail ────────────────────────────────────────────
+  // ─── meta_detail ────────────────────────────────────────────
   api.registerTool({
-    name: 'synth_detail',
+    name: 'meta_detail',
     description:
       'Full detail for a single meta, with optional archive history.',
     parameters: {
@@ -331,9 +331,9 @@ export function registerSynthTools(api: PluginApi): void {
     },
   });
 
-  // ─── synth_preview ────────────────────────────────────────────
+  // ─── meta_preview ────────────────────────────────────────────
   api.registerTool({
-    name: 'synth_preview',
+    name: 'meta_preview',
     description:
       'Dry-run: show what inputs would be gathered for the next synthesis cycle without running LLM.',
     parameters: {
@@ -470,9 +470,9 @@ export function registerSynthTools(api: PluginApi): void {
     },
   });
 
-  // ─── synth_trigger ────────────────────────────────────────────
+  // ─── meta_trigger ────────────────────────────────────────────
   api.registerTool({
-    name: 'synth_trigger',
+    name: 'meta_trigger',
     description:
       'Manually trigger synthesis for a specific meta or the next-stalest candidate. Runs the full 3-step cycle (architect, builder, critic).',
     parameters: {
@@ -490,44 +490,72 @@ export function registerSynthTools(api: PluginApi): void {
       params: Record<string, unknown>,
     ): Promise<ToolResult> => {
       try {
-        const { orchestrate } = await import('@karmaniverous/jeeves-meta');
+        const { orchestrate, listMetas } =
+          await import('@karmaniverous/jeeves-meta');
         const { GatewayExecutor } = await import('@karmaniverous/jeeves-meta');
 
         const config = getConfig();
+        const watcher = getWatcher();
+        const targetPath = params.path as string | undefined;
+
+        // Pre-flight: verify there are discoverable metas and a valid target
+        const list = await listMetas(config, watcher);
+        if (list.entries.length === 0) {
+          return ok({
+            status: 'skipped',
+            message: 'No metas discovered — nothing to synthesize.',
+          });
+        }
+
+        if (targetPath) {
+          const { normalizePath } = await import('@karmaniverous/jeeves-meta');
+          const normalized = normalizePath(targetPath);
+          const found = list.entries.some(
+            (e) =>
+              normalizePath(e.path) === normalized ||
+              normalizePath(e.path) === normalized + '/.meta',
+          );
+          if (!found) {
+            return ok({
+              status: 'skipped',
+              message:
+                'Target path not found in discovered metas: ' + targetPath,
+            });
+          }
+        }
+
+        // Fire-and-forget: run orchestration in background
         const executor = new GatewayExecutor({
           gatewayUrl: config.gatewayUrl,
           apiKey: config.gatewayApiKey,
         });
-        const watcher = getWatcher();
 
-        const targetPath = params.path as string | undefined;
-        const results = await orchestrate(
-          config,
-          executor,
-          watcher,
-          targetPath,
+        void orchestrate(config, executor, watcher, targetPath).then(
+          (results) => {
+            const synthesized = results.filter((r) => r.synthesized);
+            if (synthesized.length > 0) {
+              console.log(
+                '[jeeves-meta] Synthesis complete:',
+                synthesized.length,
+                'meta(s).',
+                synthesized.some((r) => r.error)
+                  ? 'Some had errors.'
+                  : 'All succeeded.',
+              );
+            }
+          },
+          (err: unknown) => {
+            const msg = err instanceof Error ? err.message : String(err);
+            console.error('[jeeves-meta] Synthesis failed:', msg);
+          },
         );
-        const synthesized = results.filter((r) => r.synthesized);
-
-        if (synthesized.length === 0) {
-          return ok({
-            message:
-              'No synthesis performed — no stale metas found or all locked.',
-          });
-        }
 
         return ok({
-          synthesizedCount: synthesized.length,
-          results: synthesized.map((r) => ({
-            metaPath: r.metaPath,
-            error: r.error ?? null,
-          })),
+          status: 'accepted',
+          target: targetPath ?? 'stalest candidate',
           message:
-            synthesized.length.toString() +
-            ' meta(s) synthesized.' +
-            (synthesized.some((r) => r.error)
-              ? ' Some completed with errors.'
-              : ''),
+            'Synthesis started in background.' +
+            ' Results will appear in meta.json when complete.',
         });
       } catch (error) {
         return fail(error);

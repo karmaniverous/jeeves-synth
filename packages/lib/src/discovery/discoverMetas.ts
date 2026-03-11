@@ -10,7 +10,7 @@
 import type { WatcherClient } from '../interfaces/index.js';
 import { normalizePath } from '../normalizePath.js';
 import { paginatedScan } from '../paginatedScan.js';
-import type { SynthConfig } from '../schema/index.js';
+import type { MetaConfig } from '../schema/index.js';
 
 /**
  * Build a single Qdrant filter clause from a key-value pair.
@@ -46,10 +46,10 @@ function buildMatchClause(
  * to construct `must` clauses. Always appends `file_path: meta.json`
  * for deduplication.
  *
- * @param config - Synth config with metaProperty.
+ * @param config - Meta config with metaProperty.
  * @returns Qdrant filter object for scanning live metas.
  */
-export function buildMetaFilter(config: SynthConfig): Record<string, unknown> {
+export function buildMetaFilter(config: MetaConfig): Record<string, unknown> {
   const must: Record<string, unknown>[] = [];
 
   for (const [key, value] of Object.entries(config.metaProperty)) {
@@ -59,7 +59,7 @@ export function buildMetaFilter(config: SynthConfig): Record<string, unknown> {
 
   must.push({
     key: 'file_path',
-    match: { text: 'meta.json' },
+    match: { text: '.meta/meta.json' },
   });
 
   return { must };
@@ -71,12 +71,12 @@ export function buildMetaFilter(config: SynthConfig): Record<string, unknown> {
  * Queries the watcher for indexed .meta/meta.json points using the
  * configured domain filter. Returns deduplicated meta directory paths.
  *
- * @param config - Synth config (for domain filter).
+ * @param config - Meta config (for domain filter).
  * @param watcher - WatcherClient for scan queries.
  * @returns Array of normalized .meta/ directory paths.
  */
 export async function discoverMetas(
-  config: SynthConfig,
+  config: MetaConfig,
   watcher: WatcherClient,
 ): Promise<string[]> {
   const filter = buildMetaFilter(config);

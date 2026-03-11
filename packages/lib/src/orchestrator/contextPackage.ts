@@ -1,5 +1,5 @@
 /**
- * Build the SynthContext for a synthesis cycle.
+ * Build the MetaContext for a synthesis cycle.
  *
  * Computes shared inputs once: scope files, delta files, child meta outputs,
  * previous content/feedback, steer, and archive paths.
@@ -12,7 +12,7 @@ import { join } from 'node:path';
 
 import { listArchiveFiles } from '../archive/index.js';
 import { filterInScope, type MetaNode } from '../discovery/index.js';
-import type { SynthContext, WatcherClient } from '../interfaces/index.js';
+import type { MetaContext, WatcherClient } from '../interfaces/index.js';
 import { paginatedScan } from '../paginatedScan.js';
 import type { MetaJson } from '../schema/index.js';
 
@@ -58,7 +58,7 @@ export async function buildContextPackage(
   node: MetaNode,
   meta: MetaJson,
   watcher: WatcherClient,
-): Promise<SynthContext> {
+): Promise<MetaContext> {
   // Scope files via watcher scan, excluding child subtrees
   const allScanFiles = await paginatedScan(watcher, {
     pathPrefix: node.ownerPath,

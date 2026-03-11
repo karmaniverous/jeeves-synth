@@ -9,7 +9,7 @@ produce structured synthesis artifacts co-located with source content.
 
 ## Available Tools
 
-### synth_list
+### meta_list
 List all `.meta/` directories with summary stats and per-meta projection.
 Supports filtering by path prefix, error status, staleness, and lock state.
 Use for engine health checks and finding stale knowledge.
@@ -19,7 +19,7 @@ Use for engine health checks and finding stale knowledge.
 - `filter` (optional): Structured filter (`{ hasError: true }`, `{ staleHours: 24 }`)
 - `fields` (optional): Property projection array
 
-### synth_detail
+### meta_detail
 Full detail for a single meta, with optional archive history.
 
 **Parameters:**
@@ -27,17 +27,17 @@ Full detail for a single meta, with optional archive history.
 - `fields` (optional): Property projection
 - `includeArchive` (optional): false, true, or number (N most recent)
 
-### synth_preview
+### meta_preview
 Dry-run for the next synthesis cycle. Shows scope files, delta files,
 architect trigger reasons, steer status, and structure changes — without
-running any LLM calls. Use before `synth_trigger` to understand what
+running any LLM calls. Use before `meta_trigger` to understand what
 will happen.
 
 **Parameters:**
 - `path` (optional): Specific `.meta/` or owner directory path. If omitted,
   previews the stalest candidate.
 
-### synth_trigger
+### meta_trigger
 Manually trigger a full synthesis cycle (architect → builder → critic) for
 a specific meta or the next-stalest candidate.
 
@@ -47,12 +47,12 @@ a specific meta or the next-stalest candidate.
 
 ## When to Use
 
-- **Checking synthesis health:** `synth_list`
-- **Finding stale knowledge:** `synth_list` with `filter: { staleHours: 24 }`
-- **Checking errors:** `synth_list` with `filter: { hasError: true }`
-- **Getting full details:** `synth_detail` with optional `includeArchive: 5`
-- **Understanding what a cycle will do:** `synth_preview`
-- **Forcing a refresh:** `synth_trigger` with optional path
+- **Checking synthesis health:** `meta_list`
+- **Finding stale knowledge:** `meta_list` with `filter: { staleHours: 24 }`
+- **Checking errors:** `meta_list` with `filter: { hasError: true }`
+- **Getting full details:** `meta_detail` with optional `includeArchive: 5`
+- **Understanding what a cycle will do:** `meta_preview`
+- **Forcing a refresh:** `meta_trigger` with optional path
 - **Reading synthesis output:** Use `watcher_search` filtered by the properties
   configured in `metaProperty` (e.g. `{ "domains": ["meta"] }` in production).
   The default properties are `{ _meta: "current" }` for live metas and
@@ -168,7 +168,7 @@ to override the defaults for that specific entity.
 3. Optionally edit `meta.json` to set `_steer`, `_depth`, and `_emphasis`
 4. Wait for the watcher to index the new `meta.json` (typically seconds via
    chokidar file watching)
-5. The entity appears in `synth_list` on the next query
+5. The entity appears in `meta_list` on the next query
 
 ### Tuning Scheduling
 
@@ -224,10 +224,10 @@ JEEVES_META_CONFIG=J:\config\jeeves-meta.config.json
 
 ### First Synthesis
 
-1. Check discovery: `synth_list` — should show your `.meta/` entities
-2. Preview: `synth_preview` — verify scope files and delta detection
-3. Trigger: `synth_trigger` — run the first cycle
-4. Review: `synth_detail <path>` with `includeArchive: 1` — check output quality
+1. Check discovery: `meta_list` — should show your `.meta/` entities
+2. Preview: `meta_preview` — verify scope files and delta detection
+3. Trigger: `meta_trigger` — run the first cycle
+4. Review: `meta_detail <path>` with `includeArchive: 1` — check output quality
 5. Iterate on `_steer` prompts if needed
 
 ## Library CLI
@@ -257,7 +257,7 @@ All commands support `--json` for machine-readable output.
 
 ### No entities discovered
 
-**Symptom:** `synth_list` returns empty, TOOLS.md shows "No synthesis entities found"
+**Symptom:** `meta_list` returns empty, TOOLS.md shows "No synthesis entities found"
 **Cause:** No `.meta/meta.json` files indexed, or `metaProperty` mismatch
 **Fix:**
 1. Verify `.meta/meta.json` files exist on disk
@@ -270,17 +270,17 @@ All commands support `--json` for machine-readable output.
 
 ### Synthesis stuck (locked entities)
 
-**Symptom:** `synth_list` shows locked entities that never unlock
+**Symptom:** `meta_list` shows locked entities that never unlock
 **Cause:** Previous synthesis crashed, leaving stale `.lock` file
 **Fix:**
-1. Check lock: `synth_detail <path>` — look for `locked: true`
+1. Check lock: `meta_detail <path>` — look for `locked: true`
 2. Locks auto-expire after 30 minutes
 3. For immediate unlock: `npx @karmaniverous/jeeves-meta unlock <path>`
    or delete `.meta/.lock` file manually
 
 ### Executor timeouts
 
-**Symptom:** `synth_trigger` fails with timeout error
+**Symptom:** `meta_trigger` fails with timeout error
 **Cause:** Subprocess took longer than configured timeout
 **Fix:**
 1. Increase timeout in config (`architectTimeout`, `builderTimeout`,
@@ -290,20 +290,20 @@ All commands support `--json` for machine-readable output.
 
 ### LLM errors in synthesis steps
 
-**Symptom:** `synth_detail` shows `_error` field with step/code/message
+**Symptom:** `meta_detail` shows `_error` field with step/code/message
 **Cause:** Subprocess failed (API error, malformed output, rate limit)
 **Fix:**
-1. Check error details: `synth_detail <path>` — `_error.step` tells you
+1. Check error details: `meta_detail <path>` — `_error.step` tells you
    which step failed
 2. Architect failure with existing `_builder`: engine reuses cached brief
    (self-healing)
-3. Architect failure without `_builder` (first run): retry with `synth_trigger`
+3. Architect failure without `_builder` (first run): retry with `meta_trigger`
 4. Builder failure: meta stays stale, retried next cycle automatically
 5. Critic failure: content saved without feedback, not critical
 
 ### Discovery returns wrong/stale results
 
-**Symptom:** `synth_list` shows old metas or misses new ones
+**Symptom:** `meta_list` shows old metas or misses new ones
 **Cause:** Virtual rules not re-registered after config change, or watcher
 not yet indexed new files
 **Fix:**
@@ -315,7 +315,7 @@ not yet indexed new files
 
 ## Gotchas
 
-- `synth_trigger` runs a full LLM cycle (3 subprocess calls). It can take
+- `meta_trigger` runs a full LLM cycle (3 subprocess calls). It can take
   several minutes.
 - A locked meta (another synthesis in progress) will be skipped silently.
 - First-run quality is lower — the feedback loop needs 2-3 cycles to calibrate.

@@ -19,8 +19,8 @@ import { discoverMetas } from '../discovery/discoverMetas.js';
 import { buildOwnershipTree, findNode } from '../discovery/index.js';
 import { filterInScope, getScopePrefix } from '../discovery/scope.js';
 import type { MetaNode } from '../discovery/types.js';
-import { toSynthError } from '../errors.js';
-import type { SynthExecutor, WatcherClient } from '../interfaces/index.js';
+import { toMetaError } from '../errors.js';
+import type { MetaExecutor, WatcherClient } from '../interfaces/index.js';
 import { acquireLock, releaseLock } from '../lock.js';
 import { normalizePath } from '../normalizePath.js';
 import { paginatedScan } from '../paginatedScan.js';
@@ -31,7 +31,7 @@ import {
   isArchitectTriggered,
   isStale,
 } from '../scheduling/index.js';
-import type { MetaJson, SynthConfig, SynthError } from '../schema/index.js';
+import type { MetaConfig, MetaError, MetaJson } from '../schema/index.js';
 import { computeStructureHash } from '../structureHash.js';
 import {
   buildArchitectTask,
@@ -54,14 +54,14 @@ export interface OrchestrateResult {
   /** Path to the meta that was synthesized, if any. */
   metaPath?: string;
   /** Error if synthesis failed. */
-  error?: SynthError;
+  error?: MetaError;
 }
 
 /** Finalize a cycle: merge, snapshot, prune. */
 function finalizeCycle(
   metaPath: string,
   current: MetaJson,
-  config: SynthConfig,
+  config: MetaConfig,
   architect: string,
   builder: string,
   critic: string,
@@ -69,7 +69,7 @@ function finalizeCycle(
   feedback: string | null,
   structureHash: string,
   synthesisCount: number,
-  error: SynthError | null,
+  error: MetaError | null,
   architectTokens?: number,
   builderTokens?: number,
   criticTokens?: number,
@@ -106,8 +106,8 @@ function finalizeCycle(
  * @returns Result indicating whether synthesis occurred.
  */
 async function orchestrateOnce(
-  config: SynthConfig,
-  executor: SynthExecutor,
+  config: MetaConfig,
+  executor: MetaExecutor,
   watcher: WatcherClient,
   targetPath?: string,
 ): Promise<OrchestrateResult> {
@@ -130,7 +130,11 @@ async function orchestrateOnce(
     }
   }
 
-  const tree = buildOwnershipTree(metaPaths);
+  // Only build tree from paths with readable meta.json (excludes orphaned/deleted entries)
+  const validPaths = metaPaths.filter((mp) => metas.has(normalizePath(mp)));
+  if (validPaths.length === 0) return { synthesized: false };
+
+  const tree = buildOwnershipTree(validPaths);
 
   // If targetPath specified, skip candidate selection — go directly to that meta
   let targetNode: MetaNode | undefined;
@@ -238,7 +242,7 @@ async function orchestrateOnce(
 
     let builderBrief = currentMeta._builder ?? '';
     let synthesisCount = currentMeta._synthesisCount ?? 0;
-    let stepError: SynthError | null = null;
+    let stepError: MetaError | null = null;
     let architectTokens: number | undefined;
     let builderTokens: number | undefined;
     let criticTokens: number | undefined;
@@ -247,13 +251,14 @@ async function orchestrateOnce(
       try {
         const architectTask = buildArchitectTask(ctx, currentMeta, config);
         const architectResult = await executor.spawn(architectTask, {
+          thinking: config.thinking,
           timeout: config.architectTimeout,
         });
         builderBrief = parseArchitectOutput(architectResult.output);
         architectTokens = architectResult.tokens;
         synthesisCount = 0;
       } catch (err) {
-        stepError = toSynthError('architect', err);
+        stepError = toMetaError('architect', err);
 
         if (!currentMeta._builder) {
           // No cached builder — cycle fails
@@ -287,13 +292,14 @@ async function orchestrateOnce(
     try {
       const builderTask = buildBuilderTask(ctx, metaForBuilder, config);
       const builderResult = await executor.spawn(builderTask, {
+        thinking: config.thinking,
         timeout: config.builderTimeout,
       });
       builderOutput = parseBuilderOutput(builderResult.output);
       builderTokens = builderResult.tokens;
       synthesisCount++;
     } catch (err) {
-      stepError = toSynthError('builder', err);
+      stepError = toMetaError('builder', err);
       return { synthesized: true, metaPath: node.metaPath, error: stepError };
     }
 
@@ -306,13 +312,14 @@ async function orchestrateOnce(
     try {
       const criticTask = buildCriticTask(ctx, metaForCritic, config);
       const criticResult = await executor.spawn(criticTask, {
+        thinking: config.thinking,
         timeout: config.criticTimeout,
       });
       feedback = parseCriticOutput(criticResult.output);
       criticTokens = criticResult.tokens;
       stepError = null; // Clear any architect error on full success
     } catch (err) {
-      stepError = stepError ?? toSynthError('critic', err);
+      stepError = stepError ?? toMetaError('critic', err);
     }
 
     // Steps 11-12: Merge, archive, prune
@@ -356,8 +363,8 @@ async function orchestrateOnce(
  * @returns Array of results, one per cycle attempted.
  */
 export async function orchestrate(
-  config: SynthConfig,
-  executor: SynthExecutor,
+  config: MetaConfig,
+  executor: MetaExecutor,
   watcher: WatcherClient,
   targetPath?: string,
 ): Promise<OrchestrateResult[]> {

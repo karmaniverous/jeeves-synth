@@ -7,7 +7,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { type SynthConfig, synthConfigSchema } from './schema/index.js';
+import { type MetaConfig, metaConfigSchema } from './schema/index.js';
 
 /**
  * Resolve \@file: references in a config value.
@@ -23,12 +23,12 @@ function resolveFileRef(value: string, baseDir: string): string {
 }
 
 /**
- * Load synth config from a JSON file, resolving \@file: references.
+ * Load meta config from a JSON file, resolving \@file: references.
  *
  * @param configPath - Path to jeeves-meta.config.json.
- * @returns Validated SynthConfig with resolved prompt strings.
+ * @returns Validated MetaConfig with resolved prompt strings.
  */
-export function loadSynthConfig(configPath: string): SynthConfig {
+export function loadMetaConfig(configPath: string): MetaConfig {
   const raw = JSON.parse(readFileSync(configPath, 'utf8')) as Record<
     string,
     unknown
@@ -42,7 +42,7 @@ export function loadSynthConfig(configPath: string): SynthConfig {
     raw.defaultCritic = resolveFileRef(raw.defaultCritic, baseDir);
   }
 
-  return synthConfigSchema.parse(raw);
+  return metaConfigSchema.parse(raw);
 }
 
 /**

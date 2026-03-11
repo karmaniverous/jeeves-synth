@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { resolve } from 'node:path';
 
-import { loadSynthConfig, resolveConfigPath } from './configLoader.js';
+import { loadMetaConfig, resolveConfigPath } from './configLoader.js';
 import {
   actualStaleness,
   computeEffectiveStaleness,
@@ -24,11 +24,11 @@ import {
   HttpWatcherClient,
   isArchitectTriggered,
   listMetas,
+  type MetaConfig,
   type MetaJson,
   normalizePath,
   orchestrate,
   selectCandidate,
-  type SynthConfig,
 } from './index.js';
 
 /** Read and parse a meta.json file with proper typing. */
@@ -74,13 +74,13 @@ function output(data: unknown): void {
   }
 }
 
-async function runStatus(config: SynthConfig): Promise<void> {
+async function runStatus(config: MetaConfig): Promise<void> {
   const watcher = new HttpWatcherClient({ baseUrl: config.watcherUrl });
   const result = await listMetas(config, watcher);
   output(result.summary);
 }
 
-async function runList(config: SynthConfig): Promise<void> {
+async function runList(config: MetaConfig): Promise<void> {
   const prefix = getArg('--prefix');
   const filter = getArg('--filter');
   const watcher = new HttpWatcherClient({ baseUrl: config.watcherUrl });
@@ -112,7 +112,7 @@ async function runList(config: SynthConfig): Promise<void> {
   output({ total: rows.length, items: rows });
 }
 
-async function runDetail(config: SynthConfig): Promise<void> {
+async function runDetail(config: MetaConfig): Promise<void> {
   const targetPath = args.find((a) => !a.startsWith('-') && a !== 'detail');
   if (!targetPath) {
     console.error('Usage: jeeves-meta detail <path> [--archive <n>]');
@@ -147,7 +147,7 @@ async function runDetail(config: SynthConfig): Promise<void> {
   output(result);
 }
 
-async function runPreview(config: SynthConfig): Promise<void> {
+async function runPreview(config: MetaConfig): Promise<void> {
   const targetPath = getArg('--path');
   const {
     filterInScope,
@@ -222,7 +222,7 @@ async function runPreview(config: SynthConfig): Promise<void> {
   });
 }
 
-async function runSynthesize(config: SynthConfig): Promise<void> {
+async function runSynthesize(config: MetaConfig): Promise<void> {
   const targetPath = getArg('--path');
   const batchArg = getArg('--batch');
 
@@ -293,7 +293,7 @@ async function runUnlock(): Promise<void> {
   }
 }
 
-async function runValidate(config: SynthConfig): Promise<void> {
+async function runValidate(config: MetaConfig): Promise<void> {
   const checks: Record<string, string> = {};
 
   // Check watcher
@@ -333,7 +333,7 @@ async function runValidate(config: SynthConfig): Promise<void> {
   output({ config: 'valid', checks });
 }
 
-function runConfigShow(config: SynthConfig): void {
+function runConfigShow(config: MetaConfig): void {
   // Show config with prompts truncated for readability
   const display = {
     ...config,
@@ -387,9 +387,9 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  let config: SynthConfig;
+  let config: MetaConfig;
   try {
-    config = loadSynthConfig(resolve(configPath));
+    config = loadMetaConfig(resolve(configPath));
   } catch (err) {
     console.error(
       'Failed to load config:',

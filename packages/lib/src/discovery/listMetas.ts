@@ -14,7 +14,7 @@ import { join } from 'node:path';
 import type { WatcherClient } from '../interfaces/index.js';
 import { isLocked } from '../lock.js';
 import { normalizePath } from '../normalizePath.js';
-import type { MetaJson, SynthConfig } from '../schema/index.js';
+import type { MetaConfig, MetaJson } from '../schema/index.js';
 import { discoverMetas } from './discoverMetas.js';
 import { buildOwnershipTree } from './ownershipTree.js';
 import type { MetaNode, OwnershipTree } from './types.js';
@@ -85,7 +85,7 @@ export interface MetaListResult {
  * @returns Enriched meta list with summary statistics and ownership tree.
  */
 export async function listMetas(
-  config: SynthConfig,
+  config: MetaConfig,
   watcher: WatcherClient,
 ): Promise<MetaListResult> {
   // Step 1: Discover deduplicated meta paths via watcher scan

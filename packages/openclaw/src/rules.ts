@@ -4,12 +4,12 @@
  * Registers three inference rules with the watcher at plugin startup:
  * 1. synth-meta-live — indexes live .meta/meta.json files
  * 2. synth-meta-archive — indexes archived snapshots
- * 3. synth-config — indexes the synth config file
+ * 3. synth-config — indexes the meta config file
  *
  * @module rules
  */
 
-import type { SynthConfig } from '@karmaniverous/jeeves-meta';
+import type { MetaConfig } from '@karmaniverous/jeeves-meta';
 import { HttpWatcherClient } from '@karmaniverous/jeeves-meta';
 
 const SOURCE = 'jeeves-meta';
@@ -29,13 +29,13 @@ function toSchemaSetDirectives(
 /**
  * Build virtual rule definitions using configured domain tags.
  *
- * @param config - Synth config with metaProperty/metaArchiveProperty.
+ * @param config - Meta config with metaProperty/metaArchiveProperty.
  * @returns Array of inference rule specs.
  */
-function buildSynthRules(config: SynthConfig) {
+function buildMetaRules(config: MetaConfig) {
   return [
     {
-      name: 'synth-meta-live',
+      name: 'meta-current',
       description: 'Live jeeves-meta .meta/meta.json files',
       match: {
         properties: {
@@ -51,31 +51,31 @@ function buildSynthRules(config: SynthConfig) {
         {
           properties: {
             ...toSchemaSetDirectives(config.metaProperty),
-            synth_id: { type: 'string', set: '{{json._id}}' },
-            synth_steer: { type: 'string', set: '{{json._steer}}' },
-            synth_depth: { type: 'number', set: '{{json._depth}}' },
-            synth_emphasis: { type: 'number', set: '{{json._emphasis}}' },
-            synth_synthesis_count: {
+            meta_id: { type: 'string', set: '{{json._id}}' },
+            meta_steer: { type: 'string', set: '{{json._steer}}' },
+            meta_depth: { type: 'number', set: '{{json._depth}}' },
+            meta_emphasis: { type: 'number', set: '{{json._emphasis}}' },
+            meta_synthesis_count: {
               type: 'integer',
               set: '{{json._synthesisCount}}',
             },
-            synth_structure_hash: {
+            meta_structure_hash: {
               type: 'string',
               set: '{{json._structureHash}}',
             },
-            synth_architect_tokens: {
+            meta_architect_tokens: {
               type: 'integer',
               set: '{{json._architectTokens}}',
             },
-            synth_builder_tokens: {
+            meta_builder_tokens: {
               type: 'integer',
               set: '{{json._builderTokens}}',
             },
-            synth_critic_tokens: {
+            meta_critic_tokens: {
               type: 'integer',
               set: '{{json._criticTokens}}',
             },
-            synth_error_step: {
+            meta_error_step: {
               type: 'string',
               set: '{{json._error.step}}',
             },
@@ -94,14 +94,14 @@ function buildSynthRules(config: SynthConfig) {
       ],
       render: {
         frontmatter: [
-          'synth_id',
-          'synth_steer',
+          'meta_id',
+          'meta_steer',
           'generated_at_unix',
-          'synth_depth',
-          'synth_emphasis',
-          'synth_architect_tokens',
-          'synth_builder_tokens',
-          'synth_critic_tokens',
+          'meta_depth',
+          'meta_emphasis',
+          'meta_architect_tokens',
+          'meta_builder_tokens',
+          'meta_critic_tokens',
         ],
         body: [
           {
@@ -114,7 +114,7 @@ function buildSynthRules(config: SynthConfig) {
       renderAs: 'md',
     },
     {
-      name: 'synth-meta-archive',
+      name: 'meta-archive',
       description: 'Archived jeeves-meta .meta/archive snapshots',
       match: {
         properties: {
@@ -130,14 +130,14 @@ function buildSynthRules(config: SynthConfig) {
         {
           properties: {
             ...toSchemaSetDirectives(config.metaArchiveProperty),
-            synth_id: { type: 'string', set: '{{json._id}}' },
+            meta_id: { type: 'string', set: '{{json._id}}' },
             archived: { type: 'boolean', set: 'true' },
             archived_at: { type: 'string', set: '{{json._archivedAt}}' },
           },
         },
       ],
       render: {
-        frontmatter: ['synth_id', 'archived', 'archived_at'],
+        frontmatter: ['meta_id', 'archived', 'archived_at'],
         body: [
           {
             path: 'json._content',
@@ -149,7 +149,7 @@ function buildSynthRules(config: SynthConfig) {
       renderAs: 'md',
     },
     {
-      name: 'synth-config',
+      name: 'meta-config',
       description: 'jeeves-meta configuration file',
       match: {
         properties: {
@@ -164,7 +164,7 @@ function buildSynthRules(config: SynthConfig) {
         'base',
         {
           properties: {
-            domains: { set: ['synth-config'] },
+            domains: { set: ['meta-config'] },
           },
         },
       ],
@@ -205,10 +205,10 @@ function buildSynthRules(config: SynthConfig) {
  *
  * @param watcherUrl - Base URL for the watcher service.
  */
-export async function registerSynthRules(
+export async function registerMetaRules(
   watcherUrl: string,
-  config: SynthConfig,
+  config: MetaConfig,
 ): Promise<void> {
   const client = new HttpWatcherClient({ baseUrl: watcherUrl });
-  await client.registerRules(SOURCE, buildSynthRules(config));
+  await client.registerRules(SOURCE, buildMetaRules(config));
 }

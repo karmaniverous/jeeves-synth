@@ -4,8 +4,8 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import type { SynthContext } from '../interfaces/index.js';
-import type { MetaJson, SynthConfig } from '../schema/index.js';
+import type { MetaContext } from '../interfaces/index.js';
+import type { MetaConfig, MetaJson } from '../schema/index.js';
 import {
   buildArchitectTask,
   buildBuilderTask,
@@ -20,7 +20,7 @@ import {
 
 const testRoot = join(tmpdir(), `jeeves-meta-orch-${Date.now().toString()}`);
 
-const sampleConfig: SynthConfig = {
+const sampleConfig: MetaConfig = {
   watcherUrl: 'http://localhost:3456',
   gatewayUrl: 'http://127.0.0.1:3000',
   depthWeight: 1,
@@ -30,6 +30,7 @@ const sampleConfig: SynthConfig = {
   architectTimeout: 120,
   builderTimeout: 600,
   criticTimeout: 300,
+  thinking: 'low',
   defaultArchitect: 'You are an architect. Analyze the data shape.',
   defaultCritic: 'You are a critic. Evaluate the synthesis.',
   skipUnchanged: true,
@@ -46,7 +47,7 @@ const sampleMeta: MetaJson = {
   _generatedAt: '2026-03-08T07:00:00Z',
 };
 
-const sampleCtx: SynthContext = {
+const sampleCtx: MetaContext = {
   path: '/test/.meta',
   scopeFiles: ['/test/a.md', '/test/b.md', '/test/sub/c.md'],
   deltaFiles: ['/test/b.md'],

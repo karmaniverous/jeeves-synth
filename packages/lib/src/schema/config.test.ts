@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { synthConfigSchema } from './config.js';
+import { metaConfigSchema } from './config.js';
 
 const validConfig = {
   watcherUrl: 'http://localhost:3456',
@@ -8,9 +8,9 @@ const validConfig = {
   defaultCritic: 'You are the critic...',
 };
 
-describe('synthConfigSchema', () => {
+describe('metaConfigSchema', () => {
   it('accepts valid config with defaults applied', () => {
-    const result = synthConfigSchema.safeParse(validConfig);
+    const result = metaConfigSchema.safeParse(validConfig);
     expect(result.success).toBe(true);
     expect(result.data).toMatchObject({
       architectEvery: 10,
@@ -25,7 +25,7 @@ describe('synthConfigSchema', () => {
   });
 
   it('accepts config with all fields explicit', () => {
-    const result = synthConfigSchema.safeParse({
+    const result = metaConfigSchema.safeParse({
       ...validConfig,
       architectEvery: 5,
       depthWeight: 0.5,
@@ -39,7 +39,7 @@ describe('synthConfigSchema', () => {
   });
 
   it('rejects invalid watcherUrl', () => {
-    const result = synthConfigSchema.safeParse({
+    const result = metaConfigSchema.safeParse({
       ...validConfig,
       watcherUrl: 'not-a-url',
     });
@@ -51,12 +51,12 @@ describe('synthConfigSchema', () => {
       watcherUrl: validConfig.watcherUrl,
       defaultCritic: validConfig.defaultCritic,
     };
-    const result = synthConfigSchema.safeParse(partial);
+    const result = metaConfigSchema.safeParse(partial);
     expect(result.success).toBe(false);
   });
 
   it('rejects architectTimeout below minimum (30)', () => {
-    const result = synthConfigSchema.safeParse({
+    const result = metaConfigSchema.safeParse({
       ...validConfig,
       architectTimeout: 10,
     });
@@ -64,21 +64,21 @@ describe('synthConfigSchema', () => {
   });
 
   it('rejects builderTimeout below minimum (60)', () => {
-    const result = synthConfigSchema.safeParse({
+    const result = metaConfigSchema.safeParse({
       ...validConfig,
       builderTimeout: 30,
     });
     expect(result.success).toBe(false);
   });
   it('applies default metaProperty and metaArchiveProperty', () => {
-    const result = synthConfigSchema.safeParse(validConfig);
+    const result = metaConfigSchema.safeParse(validConfig);
     expect(result.success).toBe(true);
     expect(result.data?.metaProperty).toEqual({ _meta: 'current' });
     expect(result.data?.metaArchiveProperty).toEqual({ _meta: 'archive' });
   });
 
   it('accepts custom metaProperty with domains array', () => {
-    const result = synthConfigSchema.safeParse({
+    const result = metaConfigSchema.safeParse({
       ...validConfig,
       metaProperty: { domains: ['meta'] },
       metaArchiveProperty: { domains: ['meta-archive'] },
@@ -88,7 +88,7 @@ describe('synthConfigSchema', () => {
   });
 
   it('accepts arbitrary metaProperty shape', () => {
-    const result = synthConfigSchema.safeParse({
+    const result = metaConfigSchema.safeParse({
       ...validConfig,
       metaProperty: { foo: { bar: ['baz'] } },
     });

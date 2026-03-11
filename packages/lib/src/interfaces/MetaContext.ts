@@ -4,7 +4,7 @@
  * Shared inputs that multiple subprocesses need are computed once
  * and serialized into each subprocess's task prompt.
  *
- * @module interfaces/SynthContext
+ * @module interfaces/MetaContext
  */
 
 /**
@@ -13,7 +13,7 @@
  * The orchestrator computes this once per cycle from the meta path,
  * ownership tree, watcher scan results, and filesystem reads.
  */
-export interface SynthContext {
+export interface MetaContext {
   /** Absolute path to the .meta directory. */
   path: string;
 

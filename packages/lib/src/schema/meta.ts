@@ -9,7 +9,7 @@
 
 import { z } from 'zod';
 
-import { synthErrorSchema } from './error.js';
+import { metaErrorSchema } from './error.js';
 
 /** Zod schema for the reserved (underscore-prefixed) meta.json properties. */
 export const metaJsonSchema = z
@@ -98,7 +98,7 @@ export const metaJsonSchema = z
      * Structured error from last cycle. Present when a step failed.
      * Cleared on successful cycle.
      */
-    _error: synthErrorSchema.optional(),
+    _error: metaErrorSchema.optional(),
   })
   .loose();
 

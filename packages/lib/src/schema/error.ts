@@ -7,7 +7,7 @@
 import { z } from 'zod';
 
 /** Zod schema for synthesis step errors. */
-export const synthErrorSchema = z.object({
+export const metaErrorSchema = z.object({
   /** Which step failed: 'architect', 'builder', or 'critic'. */
   step: z.enum(['architect', 'builder', 'critic']),
   /** Error classification code. */
@@ -17,4 +17,4 @@ export const synthErrorSchema = z.object({
 });
 
 /** Inferred type for synthesis step errors. */
-export type SynthError = z.infer<typeof synthErrorSchema>;
+export type MetaError = z.infer<typeof metaErrorSchema>;

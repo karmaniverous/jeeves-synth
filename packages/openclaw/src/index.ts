@@ -7,22 +7,22 @@
  * @packageDocumentation
  */
 
-import { loadSynthConfig } from './configLoader.js';
+import { loadMetaConfig } from './configLoader.js';
 import type { PluginApi } from './helpers.js';
 import { getConfigPath } from './helpers.js';
-import { registerSynthRules } from './rules.js';
-import { registerSynthTools } from './tools.js';
+import { registerMetaRules } from './rules.js';
+import { registerMetaTools } from './tools.js';
 import { startToolsWriter } from './toolsWriter.js';
 
 /** Register all jeeves-meta tools and rules with the OpenClaw plugin API. */
 export default function register(api: PluginApi): void {
-  registerSynthTools(api);
+  registerMetaTools(api);
 
   // Load config for rule registration and tools writer
-  const config = loadSynthConfig(getConfigPath(api));
+  const config = loadMetaConfig(getConfigPath(api));
 
   // Register virtual rules with watcher (fire-and-forget at startup)
-  registerSynthRules(config.watcherUrl, config).catch((err: unknown) => {
+  registerMetaRules(config.watcherUrl, config).catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[jeeves-meta] Failed to register virtual rules:', message);
   });

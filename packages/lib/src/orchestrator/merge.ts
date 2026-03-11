@@ -12,7 +12,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { computeEma } from '../ema.js';
-import type { SynthError } from '../schema/index.js';
+import type { MetaError } from '../schema/index.js';
 import { type MetaJson, metaJsonSchema } from '../schema/index.js';
 import type { BuilderOutput } from './parseOutput.js';
 
@@ -37,7 +37,7 @@ export interface MergeOptions {
   /** New synthesis count. */
   synthesisCount: number;
   /** Error from any step, or null on full success. */
-  error: SynthError | null;
+  error: MetaError | null;
   /** Token count from architect step. */
   architectTokens?: number;
   /** Token count from builder step. */

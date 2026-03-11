@@ -4,12 +4,12 @@
  * @module interfaces
  */
 
-export type { SynthContext } from './SynthContext.js';
+export type { MetaContext } from './MetaContext.js';
 export type {
-  SynthExecutor,
-  SynthSpawnOptions,
-  SynthSpawnResult,
-} from './SynthExecutor.js';
+  MetaExecutor,
+  MetaSpawnOptions,
+  MetaSpawnResult,
+} from './MetaExecutor.js';
 export type {
   InferenceRuleSpec,
   ScanFile,

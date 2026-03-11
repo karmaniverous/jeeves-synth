@@ -10,7 +10,7 @@
 import {
   HttpWatcherClient,
   listMetas,
-  type SynthConfig,
+  type MetaConfig,
 } from '@karmaniverous/jeeves-meta';
 
 /**
@@ -21,10 +21,10 @@ import {
  * 2. No entities found - ACTION REQUIRED with setup guidance
  * 3. Healthy - entity stats + tool listing + skill reference
  *
- * @param config - Full synth config (for listMetas and watcherUrl).
+ * @param config - Full meta config (for listMetas and watcherUrl).
  * @returns Markdown string for the Meta section.
  */
-export async function generateMetaMenu(config: SynthConfig): Promise<string> {
+export async function generateMetaMenu(config: MetaConfig): Promise<string> {
   let result;
 
   try {
@@ -104,10 +104,10 @@ export async function generateMetaMenu(config: SynthConfig): Promise<string> {
     '### Tools',
     '| Tool | Description |',
     '|------|-------------|',
-    '| `synth_list` | List metas with summary stats and per-meta projection |',
-    '| `synth_detail` | Full detail for a single meta with optional archive history |',
-    '| `synth_trigger` | Manually trigger synthesis for a specific meta or next-stalest |',
-    '| `synth_preview` | Dry-run: show what inputs would be gathered without running LLM |',
+    '| `meta_list` | List metas with summary stats and per-meta projection |',
+    '| `meta_detail` | Full detail for a single meta with optional archive history |',
+    '| `meta_trigger` | Manually trigger synthesis for a specific meta or next-stalest |',
+    '| `meta_preview` | Dry-run: show what inputs would be gathered without running LLM |',
     '',
     'Read the `jeeves-meta` skill for usage guidance, configuration, and troubleshooting.',
   ];

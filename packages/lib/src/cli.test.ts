@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { loadSynthConfig, resolveConfigPath } from './configLoader.js';
+import { loadMetaConfig, resolveConfigPath } from './configLoader.js';
 
 describe('resolveConfigPath', () => {
   it('returns --config flag value when present', () => {
@@ -79,8 +79,8 @@ describe('resolveConfigPath', () => {
   });
 });
 
-describe('loadSynthConfig', () => {
+describe('loadMetaConfig', () => {
   it('throws on missing file', () => {
-    expect(() => loadSynthConfig('/nonexistent/config.json')).toThrow();
+    expect(() => loadMetaConfig('/nonexistent/config.json')).toThrow();
   });
 });

@@ -10,14 +10,14 @@
 import { z } from 'zod';
 
 /** Zod schema for jeeves-meta configuration. */
-export const synthConfigSchema = z.object({
+export const metaConfigSchema = z.object({
   /** Filesystem paths to watch for .meta/ directories. */
 
   /** Watcher service base URL. */
   watcherUrl: z.url(),
 
   /** OpenClaw gateway base URL for subprocess spawning. */
-  gatewayUrl: z.url().default('http://127.0.0.1:3000'),
+  gatewayUrl: z.url().default('http://127.0.0.1:18789'),
 
   /** Optional API key for gateway authentication. */
   gatewayApiKey: z.string().optional(),
@@ -42,6 +42,9 @@ export const synthConfigSchema = z.object({
 
   /** Critic subprocess timeout in seconds. */
   criticTimeout: z.number().int().min(30).default(300),
+
+  /** Thinking level for spawned synthesis sessions (e.g. "low", "medium", "high"). */
+  thinking: z.string().default('low'),
 
   /** Resolved architect system prompt text. */
   defaultArchitect: z.string(),
@@ -78,4 +81,4 @@ export const synthConfigSchema = z.object({
 });
 
 /** Inferred type for jeeves-meta configuration. */
-export type SynthConfig = z.infer<typeof synthConfigSchema>;
+export type MetaConfig = z.infer<typeof metaConfigSchema>;

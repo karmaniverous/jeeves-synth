@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { synthErrorSchema } from './error.js';
+import { metaErrorSchema } from './error.js';
 
-describe('synthErrorSchema', () => {
+describe('metaErrorSchema', () => {
   it('accepts valid error for each step', () => {
     for (const step of ['architect', 'builder', 'critic'] as const) {
-      const result = synthErrorSchema.safeParse({
+      const result = metaErrorSchema.safeParse({
         step,
         code: 'TIMEOUT',
         message: `${step} timed out`,
@@ -15,7 +15,7 @@ describe('synthErrorSchema', () => {
   });
 
   it('rejects invalid step value', () => {
-    const result = synthErrorSchema.safeParse({
+    const result = metaErrorSchema.safeParse({
       step: 'parser',
       code: 'ERR',
       message: 'bad',
@@ -24,7 +24,7 @@ describe('synthErrorSchema', () => {
   });
 
   it('rejects missing code', () => {
-    const result = synthErrorSchema.safeParse({
+    const result = metaErrorSchema.safeParse({
       step: 'builder',
       message: 'bad',
     });

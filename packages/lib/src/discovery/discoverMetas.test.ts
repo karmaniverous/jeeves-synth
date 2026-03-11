@@ -7,13 +7,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { WatcherClient } from '../interfaces/index.js';
-import type { SynthConfig } from '../schema/index.js';
+import type { MetaConfig } from '../schema/index.js';
 import { buildMetaFilter, discoverMetas } from './discoverMetas.js';
 
 const config = {
   metaProperty: { domains: ['meta'] },
   metaArchiveProperty: { domains: ['meta-archive'] },
-} as unknown as SynthConfig;
+} as unknown as MetaConfig;
 
 function mockWatcher(files: Array<{ file_path: string }>) {
   const scan = vi.fn().mockResolvedValue({
@@ -39,7 +39,7 @@ describe('buildMetaFilter', () => {
     expect(filter).toEqual({
       must: [
         { key: 'domains', match: { value: 'meta' } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -48,12 +48,12 @@ describe('buildMetaFilter', () => {
     const custom = {
       ...config,
       metaProperty: { domains: ['synth-meta'] },
-    } as unknown as SynthConfig;
+    } as unknown as MetaConfig;
     const filter = buildMetaFilter(custom);
     expect(filter).toEqual({
       must: [
         { key: 'domains', match: { value: 'synth-meta' } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -62,12 +62,12 @@ describe('buildMetaFilter', () => {
     const scalar = {
       ...config,
       metaProperty: { _meta: 'current' },
-    } as unknown as SynthConfig;
+    } as unknown as MetaConfig;
     const filter = buildMetaFilter(scalar);
     expect(filter).toEqual({
       must: [
         { key: '_meta', match: { value: 'current' } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -76,12 +76,12 @@ describe('buildMetaFilter', () => {
     const nested = {
       ...config,
       metaProperty: { _meta: 'current', nested: { foo: 'bar' } },
-    } as unknown as SynthConfig;
+    } as unknown as MetaConfig;
     const filter = buildMetaFilter(nested);
     expect(filter).toEqual({
       must: [
         { key: '_meta', match: { value: 'current' } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -90,12 +90,12 @@ describe('buildMetaFilter', () => {
     const empty = {
       ...config,
       metaProperty: { _meta: 'current', tags: [] },
-    } as unknown as SynthConfig;
+    } as unknown as MetaConfig;
     const filter = buildMetaFilter(empty);
     expect(filter).toEqual({
       must: [
         { key: '_meta', match: { value: 'current' } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -104,12 +104,12 @@ describe('buildMetaFilter', () => {
     const bool = {
       ...config,
       metaProperty: { active: true },
-    } as unknown as SynthConfig;
+    } as unknown as MetaConfig;
     const filter = buildMetaFilter(bool);
     expect(filter).toEqual({
       must: [
         { key: 'active', match: { value: true } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -118,12 +118,12 @@ describe('buildMetaFilter', () => {
     const num = {
       ...config,
       metaProperty: { priority: 5 },
-    } as unknown as SynthConfig;
+    } as unknown as MetaConfig;
     const filter = buildMetaFilter(num);
     expect(filter).toEqual({
       must: [
         { key: 'priority', match: { value: 5 } },
-        { key: 'file_path', match: { text: 'meta.json' } },
+        { key: 'file_path', match: { text: '.meta/meta.json' } },
       ],
     });
   });
@@ -165,7 +165,7 @@ describe('discoverMetas', () => {
         filter: {
           must: [
             { key: 'domains', match: { value: 'meta' } },
-            { key: 'file_path', match: { text: 'meta.json' } },
+            { key: 'file_path', match: { text: '.meta/meta.json' } },
           ],
         },
       }),

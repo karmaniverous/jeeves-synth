@@ -4,21 +4,21 @@
  * @module errors
  */
 
-import type { SynthError } from './schema/index.js';
+import type { MetaError } from './schema/index.js';
 
 /**
- * Wrap an unknown caught value into a SynthError.
+ * Wrap an unknown caught value into a MetaError.
  *
  * @param step - Which synthesis step failed.
  * @param err - The caught error value.
  * @param code - Error classification code.
- * @returns A structured SynthError.
+ * @returns A structured MetaError.
  */
-export function toSynthError(
-  step: SynthError['step'],
+export function toMetaError(
+  step: MetaError['step'],
   err: unknown,
   code = 'FAILED',
-): SynthError {
+): MetaError {
   return {
     step,
     code,
