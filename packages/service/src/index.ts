@@ -101,6 +101,9 @@ export {
   serviceConfigSchema,
 } from './schema/index.js';
 
+// ── Scheduler ──
+export { Scheduler } from './scheduler/index.js';
+
 // ── Queue ──
 export {
   type EnqueueResult,
