@@ -27,11 +27,19 @@ export function registerPreviewRoute(
   app: FastifyInstance,
   deps: RouteDeps,
 ): void {
-  app.get('/preview', async (request) => {
+  app.get('/preview', async (request, reply) => {
     const { config, watcher } = deps;
     const query = request.query as { path?: string };
 
-    const result = await listMetas(config, watcher);
+    let result;
+    try {
+      result = await listMetas(config, watcher);
+    } catch {
+      return reply.status(503).send({
+        error: 'SERVICE_UNAVAILABLE',
+        message: 'Watcher unreachable — cannot compute preview',
+      });
+    }
 
     let targetNode;
     if (query.path) {

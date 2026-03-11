@@ -45,9 +45,20 @@ export function registerMetaTools(
         },
       },
     },
-    execute: async (): Promise<ToolResult> => {
+    execute: async (
+      _id: string,
+      params: Record<string, unknown>,
+    ): Promise<ToolResult> => {
       try {
-        const data = await client.listMetas();
+        const filter = params.filter as Record<string, unknown> | undefined;
+        const data = await client.listMetas({
+          pathPrefix: params.pathPrefix as string | undefined,
+          hasError: filter?.hasError as boolean | undefined,
+          staleHours: filter?.staleHours as number | undefined,
+          neverSynthesized: filter?.neverSynthesized as boolean | undefined,
+          locked: filter?.locked as boolean | undefined,
+          fields: params.fields as string[] | undefined,
+        });
         return ok(data);
       } catch (error) {
         return fail(error);
@@ -87,10 +98,10 @@ export function registerMetaTools(
       params: Record<string, unknown>,
     ): Promise<ToolResult> => {
       try {
-        const data = await client.detail(
-          params.path as string,
-          params.includeArchive as boolean | number | undefined,
-        );
+        const data = await client.detail(params.path as string, {
+          includeArchive: params.includeArchive as boolean | number | undefined,
+          fields: params.fields as string[] | undefined,
+        });
         return ok(data);
       } catch (error) {
         return fail(error);

@@ -32,7 +32,15 @@ export function registerSynthesizeRoute(
       targetPath = body.path;
     } else {
       // Discover stalest candidate
-      const result = await listMetas(config, watcher);
+      let result;
+      try {
+        result = await listMetas(config, watcher);
+      } catch {
+        return reply.status(503).send({
+          error: 'SERVICE_UNAVAILABLE',
+          message: 'Watcher unreachable — cannot discover candidates',
+        });
+      }
       const candidates = result.entries
         .filter((e) => e.stalenessSeconds > 0)
         .map((e) => ({

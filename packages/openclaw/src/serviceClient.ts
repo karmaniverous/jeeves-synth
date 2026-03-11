@@ -52,21 +52,40 @@ export class MetaServiceClient {
   }
 
   /** GET /metas — list all meta entities with summary. */
-  public async listMetas(): Promise<unknown> {
-    return this.get('/metas');
+  public async listMetas(params?: {
+    pathPrefix?: string;
+    hasError?: boolean;
+    staleHours?: number;
+    neverSynthesized?: boolean;
+    locked?: boolean;
+    fields?: string[];
+  }): Promise<unknown> {
+    const qs = new URLSearchParams();
+    if (params?.pathPrefix) qs.set('pathPrefix', params.pathPrefix);
+    if (params?.hasError !== undefined)
+      qs.set('hasError', String(params.hasError));
+    if (params?.staleHours !== undefined)
+      qs.set('staleHours', String(params.staleHours));
+    if (params?.neverSynthesized !== undefined)
+      qs.set('neverSynthesized', String(params.neverSynthesized));
+    if (params?.locked !== undefined) qs.set('locked', String(params.locked));
+    if (params?.fields?.length) qs.set('fields', params.fields.join(','));
+    const query = qs.toString();
+    return this.get('/metas' + (query ? '?' + query : ''));
   }
 
   /** GET /metas/:path — detail for a single meta. */
   public async detail(
     metaPath: string,
-    includeArchive?: boolean | number,
+    options?: { includeArchive?: boolean | number; fields?: string[] },
   ): Promise<unknown> {
     const encoded = encodeURIComponent(metaPath);
-    const qs =
-      includeArchive !== undefined
-        ? `?includeArchive=${String(includeArchive)}`
-        : '';
-    return this.get(`/metas/${encoded}${qs}`);
+    const qs = new URLSearchParams();
+    if (options?.includeArchive !== undefined)
+      qs.set('includeArchive', String(options.includeArchive));
+    if (options?.fields?.length) qs.set('fields', options.fields.join(','));
+    const query = qs.toString();
+    return this.get(`/metas/${encoded}` + (query ? '?' + query : ''));
   }
 
   /** GET /preview — dry-run next synthesis candidate. */
@@ -90,8 +109,8 @@ export class MetaServiceClient {
     return this.post('/unlock', { path });
   }
 
-  /** POST /config/validate — validate config. */
-  public async validate(config?: Record<string, unknown>): Promise<unknown> {
-    return this.post('/config/validate', config ?? {});
+  /** GET /config/validate — validate current config. */
+  public async validate(): Promise<unknown> {
+    return this.get('/config/validate');
   }
 }

@@ -259,6 +259,10 @@ export async function startService(
         watcher,
         path,
         async (evt) => {
+          // Track token stats from phase completions
+          if (evt.type === 'phase_complete' && evt.tokens) {
+            stats.totalTokens += evt.tokens;
+          }
           await progress.report(evt);
         },
       );
@@ -279,6 +283,7 @@ export async function startService(
           error: result.error.message,
         });
       } else {
+        scheduler.resetBackoff();
         await progress.report({
           type: 'synthesis_complete',
           metaPath: path,
@@ -321,6 +326,7 @@ export async function startService(
 
   // Rule registration (fire-and-forget with retries)
   const registrar = new RuleRegistrar(config, logger);
+  scheduler.setRegistrar(registrar);
   void registrar.register();
 
   // Config hot-reload (gap #12)

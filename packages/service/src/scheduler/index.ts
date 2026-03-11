@@ -10,6 +10,7 @@ import type { Logger } from 'pino';
 
 import { listMetas } from '../discovery/index.js';
 import type { SynthesisQueue } from '../queue/index.js';
+import type { RuleRegistrar } from '../rules/index.js';
 import {
   computeEffectiveStaleness,
   selectCandidate,
@@ -28,10 +29,12 @@ const MAX_BACKOFF_MULTIPLIER = 4;
 export class Scheduler {
   private job: Cron | null = null;
   private backoffMultiplier = 1;
+  private tickCount = 0;
   private readonly config: ServiceConfig;
   private readonly queue: SynthesisQueue;
   private readonly logger: Logger;
   private readonly watcher: HttpWatcherClient;
+  private registrar: RuleRegistrar | null = null;
   private currentExpression: string;
 
   constructor(
@@ -45,6 +48,11 @@ export class Scheduler {
     this.logger = logger;
     this.watcher = watcher;
     this.currentExpression = config.schedule;
+  }
+
+  /** Set the rule registrar for watcher restart detection. */
+  setRegistrar(registrar: RuleRegistrar): void {
+    this.registrar = registrar;
   }
 
   /** Start the cron job. */
@@ -83,6 +91,14 @@ export class Scheduler {
     }
   }
 
+  /** Reset backoff multiplier (call after successful synthesis). */
+  resetBackoff(): void {
+    if (this.backoffMultiplier > 1) {
+      this.logger.debug('Backoff reset after successful synthesis');
+    }
+    this.backoffMultiplier = 1;
+  }
+
   /** Whether the scheduler is currently running. */
   get isRunning(): boolean {
     return this.job !== null;
@@ -101,6 +117,23 @@ export class Scheduler {
    * when no candidates are found.
    */
   private async tick(): Promise<void> {
+    this.tickCount++;
+
+    // Apply backoff: skip ticks when backing off
+    if (
+      this.backoffMultiplier > 1 &&
+      this.tickCount % this.backoffMultiplier !== 0
+    ) {
+      this.logger.trace(
+        {
+          backoffMultiplier: this.backoffMultiplier,
+          tickCount: this.tickCount,
+        },
+        'Skipping tick (backoff)',
+      );
+      return;
+    }
+
     const candidate = await this.discoverStalest();
 
     if (!candidate) {
@@ -115,9 +148,28 @@ export class Scheduler {
       return;
     }
 
-    this.backoffMultiplier = 1;
     this.queue.enqueue(candidate);
     this.logger.info({ path: candidate }, 'Enqueued stale candidate');
+
+    // Opportunistic watcher restart detection
+    if (this.registrar) {
+      try {
+        const statusRes = await fetch(
+          new URL('/status', this.config.watcherUrl),
+          {
+            signal: AbortSignal.timeout(3000),
+          },
+        );
+        if (statusRes.ok) {
+          const status = (await statusRes.json()) as { uptime?: number };
+          if (typeof status.uptime === 'number') {
+            await this.registrar.checkAndReregister(status.uptime);
+          }
+        }
+      } catch {
+        // Watcher unreachable — skip uptime check
+      }
+    }
   }
 
   /**
