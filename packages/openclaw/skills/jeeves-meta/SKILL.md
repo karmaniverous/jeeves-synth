@@ -228,9 +228,10 @@ and errors. This uses
 
 The plugin's TOOLS.md injection automatically prompts bootstrapping:
 - **Service unreachable:** Shows "ACTION REQUIRED: jeeves-meta service is
-  unreachable" with troubleshooting steps
+  unreachable" with troubleshooting steps and directs to this skill's
+  Bootstrapping section
 - **No entities found:** Shows "ACTION REQUIRED: No synthesis entities found"
-  and directs to this skill's Bootstrap section
+  and directs to this skill's Bootstrapping section
 
 These messages appear in the agent's system prompt, ensuring proactive
 discovery of configuration issues.

@@ -53,9 +53,11 @@ export async function generateMetaMenu(
       '> The service API is down or not configured.',
       '>',
       '> **Troubleshooting:**',
-      '> - Check if the JeevesMeta service is running',
-      '> - Verify the serviceUrl in plugins.entries.jeeves-meta-openclaw.config',
-      '> - Try: `jeeves-meta service start`',
+      '> - Verify the service is installed: `npm list -g @karmaniverous/jeeves-meta`',
+      '> - Check if running: `curl http://localhost:1938/status`',
+      '> - Verify `serviceUrl` in plugin config if using a non-default port',
+      '>',
+      "> **Read the `jeeves-meta` skill's Bootstrapping section** for full setup guidance.",
     ].join('\n');
   }
 
@@ -64,7 +66,7 @@ export async function generateMetaMenu(
       '> **ACTION REQUIRED: No synthesis entities found.**',
       '> The service is running but no `.meta/` directories were discovered.',
       '>',
-      "> **Read the `jeeves-meta` skill's Bootstrap section** for guidance",
+      "> **Read the `jeeves-meta` skill's Bootstrapping section** for guidance",
       '> on creating `.meta/` directories.',
     ].join('\n');
   }
