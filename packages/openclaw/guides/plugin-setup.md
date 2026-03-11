@@ -1,59 +1,49 @@
----
-title: Plugin Setup
----
-
 # Plugin Setup
 
 ## Installation
 
-Install the plugin package:
-
 ```bash
 npm install @karmaniverous/jeeves-meta-openclaw
-```
-
-Run the CLI installer to register with the OpenClaw gateway:
-
-```bash
 npx @karmaniverous/jeeves-meta-openclaw install
 ```
 
-Then restart the OpenClaw gateway to load the plugin.
+## Prerequisites
 
-## Configuration
+The plugin requires the **jeeves-meta service** to be running. The plugin itself contains no synthesis logic — it delegates all operations via HTTP.
 
-The plugin reads its config path from the `configPath` setting in `openclaw.json`. This points to a `jeeves-meta.config.json` file:
+## Service URL Resolution
+
+The plugin resolves the service URL in this order:
+
+1. **Plugin config** — `serviceUrl` in the OpenClaw plugin config
+2. **Environment variable** — `JEEVES_META_URL`
+3. **Default** — `http://127.0.0.1:1938`
+
+## Plugin Config
+
+In your OpenClaw configuration (`openclaw.json` or equivalent):
 
 ```json
 {
-  "watchPaths": ["j:/domains"],
-  "watcherUrl": "http://localhost:1936",
-  "gatewayUrl": "http://127.0.0.1:3000",
-  "defaultArchitect": "@file:jeeves-meta/prompts/architect.md",
-  "defaultCritic": "@file:jeeves-meta/prompts/critic.md",
-  "depthWeight": 0.5,
-  "skipUnchanged": true,
-  "batchSize": 1,
-  "maxArchive": 20
+  "plugins": {
+    "entries": {
+      "jeeves-meta-openclaw": {
+        "enabled": true,
+        "config": {
+          "serviceUrl": "http://127.0.0.1:1938"
+        }
+      }
+    }
+  }
 }
 ```
 
-See the [Configuration Guide](../../lib/guides/configuration.md) for the complete schema.
-
-### @file: Resolution
-
-Prompt values prefixed with `@file:` are resolved **relative to the config file's directory**. The config loader reads the referenced file and replaces the `@file:` value with its contents.
-
-For example, if the config is at `/config/jeeves-meta.config.json`:
-- `@file:jeeves-meta/prompts/architect.md` resolves to `/config/jeeves-meta/prompts/architect.md`
-
 ## Lifecycle
 
-At gateway startup, the plugin:
+On gateway startup:
+1. Plugin registers 4 tools (`meta_list`, `meta_detail`, `meta_trigger`, `meta_preview`)
+2. Starts periodic TOOLS.md writer (5s initial delay, then every 60s)
+3. TOOLS.md writer queries `/status` and `/metas` from the service and upserts a `## Meta` section
 
-1. Loads config via `loadSynthConfig()` (re-exported from the core library)
-2. Registers four tools (`synth_list`, `synth_detail`, `synth_trigger`, `synth_preview`)
-3. Registers three virtual inference rules with jeeves-watcher (fire-and-forget)
-4. Writes the dynamic TOOLS.md section with entity stats
+The plugin does **not** register virtual rules — that is the service's responsibility via the `RuleRegistrar`.
 
-The plugin uses lazy config loading — the config file is read once on first tool invocation, not at startup.

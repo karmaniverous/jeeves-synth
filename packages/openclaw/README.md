@@ -1,13 +1,13 @@
 # @karmaniverous/jeeves-meta-openclaw
 
-OpenClaw plugin for [jeeves-meta](../lib/). Registers synthesis tools and virtual inference rules with the OpenClaw gateway.
+OpenClaw plugin for [jeeves-meta](../service/). A thin HTTP client that registers interactive tools and maintains dynamic TOOLS.md content.
 
 ## Features
 
-- **Four interactive tools** — `synth_list`, `synth_detail`, `synth_trigger`, `synth_preview`
-- **GatewayExecutor** — spawns LLM sessions via the OpenClaw gateway HTTP API (included in core lib)
-- **Virtual inference rules** — registers Qdrant indexing rules for `.meta/meta.json` files, archive snapshots, and config
-- **TOOLS.md injection** — dynamic system prompt with entity stats and tool listing
+- **Four interactive tools** — `meta_list`, `meta_detail`, `meta_trigger`, `meta_preview`
+- **MetaServiceClient** — HTTP client delegating all operations to the running service
+- **TOOLS.md injection** — periodic refresh of entity stats and tool listing in the agent's system prompt
+- **Dependency health** — shows warnings when watcher/gateway are degraded
 - **Consumer skill** — `SKILL.md` for agent integration
 
 ## Install
@@ -24,27 +24,34 @@ npx @karmaniverous/jeeves-meta-openclaw install
 
 ## Configuration
 
-The plugin reads its config path from the plugin `configPath` setting in `openclaw.json`. The config file itself is a standard `SynthConfig` JSON:
+The plugin resolves the service URL in order:
+1. Plugin config `serviceUrl` in `openclaw.json`
+2. `JEEVES_META_URL` environment variable
+3. Default: `http://127.0.0.1:1938`
 
 ```json
 {
-  "watchPaths": ["j:/domains"],
-  "watcherUrl": "http://localhost:1936",
-  "gatewayUrl": "http://127.0.0.1:3000",
-  "defaultArchitect": "@file:jeeves-meta/prompts/architect.md",
-  "defaultCritic": "@file:jeeves-meta/prompts/critic.md"
+  "plugins": {
+    "entries": {
+      "jeeves-meta-openclaw": {
+        "enabled": true,
+        "config": {
+          "serviceUrl": "http://127.0.0.1:1938"
+        }
+      }
+    }
+  }
 }
 ```
-
-See the [Configuration Guide](../lib/guides/configuration.md) for all fields and defaults.
 
 ## Documentation
 
 - **[Plugin Setup](guides/plugin-setup.md)** — installation, config, lifecycle
-- **[Tools Reference](guides/tools-reference.md)** — synth_list, synth_detail, synth_trigger, synth_preview
-- **[Virtual Rules](guides/virtual-rules.md)** — Qdrant inference rules
+- **[Tools Reference](guides/tools-reference.md)** — meta_list, meta_detail, meta_trigger, meta_preview
+- **[Virtual Rules](guides/virtual-rules.md)** — watcher inference rules
 - **[TOOLS.md Injection](guides/tools-injection.md)** — dynamic prompt generation
 
 ## License
 
 BSD-3-Clause
+

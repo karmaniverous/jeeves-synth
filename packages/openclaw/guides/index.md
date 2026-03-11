@@ -1,16 +1,7 @@
----
-title: OpenClaw Plugin
-children:
-  - ./plugin-setup.md
-  - ./tools-reference.md
-  - ./virtual-rules.md
-  - ./tools-injection.md
-  - ../CHANGELOG.md
----
+# Plugin Guides
 
-# OpenClaw Plugin
+- **[Plugin Setup](plugin-setup.md)** — installation, configuration, service URL resolution
+- **[Tools Reference](tools-reference.md)** — meta_list, meta_detail, meta_trigger, meta_preview
+- **[Virtual Rules](virtual-rules.md)** — watcher inference rules registered by the service
+- **[TOOLS.md Injection](tools-injection.md)** — dynamic prompt generation
 
-- [Plugin Setup](./plugin-setup.md) — installation, configuration, lifecycle, and config loader.
-- [Tools Reference](./tools-reference.md) — synth_list, synth_detail, synth_trigger, synth_preview.
-- [Virtual Rules](./virtual-rules.md) — inference rules registered with jeeves-watcher for Qdrant indexing.
-- [TOOLS.md Injection](./tools-injection.md) — dynamic system prompt generation with entity stats.
