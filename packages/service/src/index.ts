@@ -78,6 +78,15 @@ export {
   parseCriticOutput,
 } from './orchestrator/index.js';
 
+// ── Progress ──
+export {
+  formatProgressEvent,
+  type ProgressEvent,
+  type ProgressPhase,
+  ProgressReporter,
+  type ProgressReporterConfig,
+} from './progress/index.js';
+
 // ── Scheduling ──
 export {
   actualStaleness,
@@ -115,9 +124,15 @@ export {
 // ── Routes ──
 export { registerRoutes, type RouteDeps } from './routes/index.js';
 
+// ── Rules ──
+export { RuleRegistrar } from './rules/index.js';
+
 // ── Server ──
 export type { ServerOptions } from './server.js';
 export { createServer } from './server.js';
+
+// ── Shutdown ──
+export { registerShutdownHandlers } from './shutdown/index.js';
 
 // ── Watcher Client ──
 export {
@@ -126,13 +141,21 @@ export {
 } from './watcher-client/index.js';
 
 // ── Service Bootstrap ──
+import { GatewayExecutor } from './executor/index.js';
 import { createLogger } from './logger/index.js';
+import { orchestrate } from './orchestrator/index.js';
+import { ProgressReporter } from './progress/index.js';
 import { SynthesisQueue } from './queue/index.js';
+import { RuleRegistrar } from './rules/index.js';
+import { Scheduler } from './scheduler/index.js';
 import { type ServiceConfig } from './schema/config.js';
 import { createServer } from './server.js';
+import { registerShutdownHandlers } from './shutdown/index.js';
+import { HttpWatcherClient } from './watcher-client/index.js';
 
 /**
- * Bootstrap the service: create logger, build server, start listening.
+ * Bootstrap the service: create logger, build server, start listening,
+ * wire scheduler, queue processing, rule registration, and shutdown.
  *
  * @param config - Validated service configuration.
  */
@@ -145,6 +168,7 @@ export async function startService(config: ServiceConfig): Promise<void> {
   const queue = new SynthesisQueue(logger);
   const server = createServer({ logger, config, queue });
 
+  // Start HTTP server
   try {
     await server.listen({ port: config.port, host: '0.0.0.0' });
     logger.info({ port: config.port }, 'Service listening');
@@ -152,4 +176,86 @@ export async function startService(config: ServiceConfig): Promise<void> {
     logger.error(err, 'Failed to start service');
     process.exit(1);
   }
+
+  // Wire synthesis executor
+  const watcher = new HttpWatcherClient({ baseUrl: config.watcherUrl });
+  const executor = new GatewayExecutor({
+    gatewayUrl: config.gatewayUrl,
+    apiKey: config.gatewayApiKey,
+  });
+
+  // Progress reporter
+  const progress = new ProgressReporter(
+    {
+      gatewayUrl: config.gatewayUrl,
+      gatewayApiKey: config.gatewayApiKey,
+      reportChannel: config.reportChannel,
+    },
+    logger,
+  );
+
+  // Wire queue processing — synthesize one meta per dequeue
+  const synthesizeFn = async (path: string): Promise<void> => {
+    const startMs = Date.now();
+    await progress.report({
+      type: 'synthesis_start',
+      metaPath: path,
+    });
+
+    try {
+      const results = await orchestrate(config, executor, watcher, path);
+      // orchestrate() always returns exactly one result
+      const result = results[0];
+
+      if (result.error) {
+        await progress.report({
+          type: 'error',
+          metaPath: path,
+          error: result.error.message,
+        });
+      } else {
+        await progress.report({
+          type: 'synthesis_complete',
+          metaPath: path,
+          durationMs: Date.now() - startMs,
+        });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await progress.report({
+        type: 'error',
+        metaPath: path,
+        error: message,
+      });
+      throw err;
+    }
+  };
+
+  // Start queue processor when items are enqueued
+  const originalEnqueue = queue.enqueue.bind(queue);
+  queue.enqueue = (path: string, priority) => {
+    const result = originalEnqueue(path, priority);
+    if (!result.alreadyQueued) {
+      void queue.processQueue(synthesizeFn);
+    }
+    return result;
+  };
+
+  // Scheduler
+  const scheduler = new Scheduler(config, queue, logger);
+  scheduler.start();
+
+  // Rule registration (fire-and-forget with retries)
+  const registrar = new RuleRegistrar(config, logger);
+  void registrar.register();
+
+  // Shutdown handlers
+  registerShutdownHandlers({
+    server,
+    scheduler,
+    queue,
+    logger,
+  });
+
+  logger.info('Service fully initialized');
 }
