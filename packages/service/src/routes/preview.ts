@@ -111,19 +111,30 @@ export function registerPreviewRoute(
 
     // EMA token estimates
     const estimatedTokens = {
-      architect: meta._architectTokens ?? 0,
-      builder: meta._builderTokens ?? 0,
-      critic: meta._criticTokens ?? 0,
+      architect: meta._architectTokensAvg ?? meta._architectTokens ?? 0,
+      builder: meta._builderTokensAvg ?? meta._builderTokens ?? 0,
+      critic: meta._criticTokensAvg ?? meta._criticTokens ?? 0,
     };
+
+    // Compute staleness score (effective staleness normalized)
+    const stalenessSeconds = meta._generatedAt
+      ? Math.round((Date.now() - new Date(meta._generatedAt).getTime()) / 1000)
+      : null;
+    const depthFactor = Math.pow(1 + config.depthWeight, meta._depth ?? 0);
+    const emphasis = meta._emphasis ?? 1;
+    const stalenessScore =
+      stalenessSeconds !== null
+        ? Math.min(
+            1,
+            (stalenessSeconds * depthFactor * emphasis) / (30 * 86400),
+          )
+        : 1;
 
     return {
       path: targetNode.metaPath,
       staleness: {
-        seconds: meta._generatedAt
-          ? Math.round(
-              (Date.now() - new Date(meta._generatedAt).getTime()) / 1000,
-            )
-          : null,
+        seconds: stalenessSeconds,
+        score: Math.round(stalenessScore * 100) / 100,
       },
       architectWillRun: architectTriggered,
       architectReason:
@@ -137,11 +148,13 @@ export function registerPreviewRoute(
         ].join(', ') || 'not triggered',
       scope: {
         ownedFiles: scopeFiles.length,
-        deltaFiles: deltaFiles.slice(0, 50).map((f) => ({ path: f })),
+        childMetas: targetNode.children.length,
+        deltaFiles: deltaFiles
+          .slice(0, 50)
+          .map((f) => ({ path: f, action: 'modified' as const })),
         deltaCount: deltaFiles.length,
       },
       estimatedTokens,
-      children: targetNode.children.map((c) => c.metaPath),
     };
   });
 }

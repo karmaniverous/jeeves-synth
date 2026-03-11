@@ -207,6 +207,15 @@ export async function startService(
   // Scheduler (needs watcher for discovery)
   const scheduler = new Scheduler(config, queue, logger, watcher);
 
+  const routeDeps = {
+    config,
+    logger,
+    queue,
+    watcher,
+    scheduler,
+    stats,
+  };
+
   const server = createServer({
     logger,
     config,
@@ -355,6 +364,7 @@ export async function startService(
     scheduler,
     queue,
     logger,
+    routeDeps,
   });
 
   logger.info('Service fully initialized');

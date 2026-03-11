@@ -25,9 +25,9 @@ export function registerUnlockRoute(
     const lockPath = join(body.path, '.meta', '.lock');
 
     if (!existsSync(lockPath)) {
-      return reply.status(404).send({
-        error: 'NOT_FOUND',
-        message: `No lock file at ${body.path}`,
+      return reply.status(409).send({
+        error: 'ALREADY_UNLOCKED',
+        message: `No lock file at ${body.path} (already unlocked)`,
       });
     }
 

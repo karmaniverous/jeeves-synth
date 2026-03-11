@@ -101,11 +101,6 @@ export class Scheduler {
    * when no candidates are found.
    */
   private async tick(): Promise<void> {
-    if (this.queue.current !== null) {
-      this.logger.trace('Queue is processing, skipping tick');
-      return;
-    }
-
     const candidate = await this.discoverStalest();
 
     if (!candidate) {

@@ -12,8 +12,10 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
 import { listArchiveFiles } from '../archive/index.js';
+import { filterInScope } from '../discovery/index.js';
 import { findNode, listMetas } from '../discovery/index.js';
 import { normalizePath } from '../normalizePath.js';
+import { paginatedScan } from '../paginatedScan.js';
 import type { RouteDeps } from './index.js';
 
 const metasQuerySchema = z.object({
@@ -186,9 +188,46 @@ export function registerMetasRoutes(
         return r;
       };
 
+      // Compute scope
+      const allScanFiles = await paginatedScan(watcher, {
+        pathPrefix: targetNode.ownerPath,
+      });
+      const allFiles = allScanFiles.map((f) => f.file_path);
+      const scopeFiles = filterInScope(targetNode, allFiles);
+
+      // Compute staleness
+      const metaTyped = meta as Record<string, unknown> & {
+        _generatedAt?: string;
+        _depth?: number;
+        _emphasis?: number;
+      };
+      const staleSeconds = metaTyped._generatedAt
+        ? Math.round(
+            (Date.now() - new Date(metaTyped._generatedAt).getTime()) / 1000,
+          )
+        : null;
+      const depthFactor = Math.pow(
+        1 + config.depthWeight,
+        metaTyped._depth ?? 0,
+      );
+      const emphasis = metaTyped._emphasis ?? 1;
+      const score =
+        staleSeconds !== null
+          ? Math.min(1, (staleSeconds * depthFactor * emphasis) / (30 * 86400))
+          : 1;
+
       const response: Record<string, unknown> = {
         path: targetNode.metaPath,
         meta: projectMeta(meta),
+        scope: {
+          ownedFiles: scopeFiles.length,
+          childMetas: targetNode.children.length,
+          totalFiles: allFiles.length,
+        },
+        staleness: {
+          seconds: staleSeconds,
+          score: Math.round(score * 100) / 100,
+        },
       };
 
       // Archive

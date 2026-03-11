@@ -47,7 +47,9 @@ export function registerStatusRoute(
 
     // Determine status
     let status: string;
-    if (queue.current) {
+    if (deps.shuttingDown) {
+      status = 'stopping';
+    } else if (queue.current) {
       status = 'synthesizing';
     } else if (degraded) {
       status = 'degraded';

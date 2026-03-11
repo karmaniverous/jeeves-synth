@@ -37,6 +37,8 @@ export interface RouteDeps {
   watcher: HttpWatcherClient;
   scheduler: Scheduler | null;
   stats: ServiceStats;
+  /** Set to true during graceful shutdown. */
+  shuttingDown?: boolean;
 }
 
 /** Register all HTTP routes on the Fastify instance. */

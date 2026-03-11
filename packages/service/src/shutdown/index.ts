@@ -11,6 +11,7 @@ import type { Logger } from 'pino';
 
 import { releaseLock } from '../lock.js';
 import type { SynthesisQueue } from '../queue/index.js';
+import type { RouteDeps } from '../routes/index.js';
 import type { Scheduler } from '../scheduler/index.js';
 
 export interface ShutdownDeps {
@@ -18,6 +19,7 @@ export interface ShutdownDeps {
   scheduler: Scheduler | null;
   queue: SynthesisQueue;
   logger: Logger;
+  routeDeps?: RouteDeps;
 }
 
 /**
@@ -37,6 +39,11 @@ export function registerShutdownHandlers(deps: ShutdownDeps): void {
     shuttingDown = true;
 
     deps.logger.info({ signal }, 'Shutdown signal received');
+
+    // Signal stopping state to /status
+    if (deps.routeDeps) {
+      deps.routeDeps.shuttingDown = true;
+    }
 
     // 1. Stop scheduler
     if (deps.scheduler) {

@@ -278,22 +278,66 @@ service.addCommand(
     }),
 );
 
+// stop command
 service.addCommand(
-  new Command('uninstall')
-    .description('Print uninstall instructions for a system service')
+  new Command('stop')
+    .description('Stop the running service')
     .option('-n, --name <name>', 'Service name', 'JeevesMeta')
     .action((options: { name: string }) => {
       const { name } = options;
 
       if (process.platform === 'win32') {
-        console.log('# NSSM uninstall (Windows)');
+        console.log('# NSSM stop (Windows)');
+        console.log(`  nssm stop ${name}`);
+        return;
+      }
+
+      if (process.platform === 'darwin') {
+        console.log('# launchd stop (macOS)');
+        console.log(
+          `  launchctl unload ~/Library/LaunchAgents/com.jeeves.meta.plist`,
+        );
+        return;
+      }
+
+      console.log('# systemd stop (Linux)');
+      console.log(`  systemctl --user stop ${name}.service`);
+    }),
+);
+
+// status command (service subcommand — queries HTTP API)
+service.addCommand(
+  new Command('status')
+    .description('Show service status via HTTP API')
+    .option('-p, --port <port>', 'Service port', '1938')
+    .action(async (opts: { port: string }) => {
+      try {
+        const res = await fetch(`http://127.0.0.1:${opts.port}/status`);
+        if (!res.ok) throw new Error(`${String(res.status)} ${res.statusText}`);
+        console.log(JSON.stringify(await res.json(), null, 2));
+      } catch (err) {
+        console.error('Service unreachable:', (err as Error).message);
+        process.exit(1);
+      }
+    }),
+);
+
+service.addCommand(
+  new Command('remove')
+    .description('Print remove instructions for a system service')
+    .option('-n, --name <name>', 'Service name', 'JeevesMeta')
+    .action((options: { name: string }) => {
+      const { name } = options;
+
+      if (process.platform === 'win32') {
+        console.log('# NSSM remove (Windows)');
         console.log(`  nssm stop ${name}`);
         console.log(`  nssm remove ${name} confirm`);
         return;
       }
 
       if (process.platform === 'darwin') {
-        console.log('# launchd uninstall (macOS)');
+        console.log('# launchd remove (macOS)');
         console.log(
           `  launchctl unload ~/Library/LaunchAgents/com.jeeves.meta.plist`,
         );
@@ -301,7 +345,7 @@ service.addCommand(
         return;
       }
 
-      console.log('# systemd uninstall (Linux)');
+      console.log('# systemd remove (Linux)');
       console.log(`  systemctl --user disable --now ${name}.service`);
       console.log(`# rm ~/.config/systemd/user/${name}.service`);
       console.log(`  systemctl --user daemon-reload`);
