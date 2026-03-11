@@ -112,8 +112,5 @@
     "npm": {
       "publish": true
     }
-  },
-  "dependencies": {
-    "@karmaniverous/jeeves-meta": "*"
   }
 }

@@ -38,8 +38,10 @@ will happen.
   previews the stalest candidate.
 
 ### meta_trigger
-Manually trigger a full synthesis cycle (architect → builder → critic) for
-a specific meta or the next-stalest candidate.
+Enqueue a synthesis cycle for a specific meta or the next-stalest candidate.
+The synthesis runs asynchronously in the service queue; the tool returns
+immediately with the queue position. The full cycle (architect → builder →
+critic) runs in the background.
 
 **Parameters:**
 - `path` (optional): Specific `.meta/` or owner directory path. If omitted,
@@ -80,7 +82,7 @@ Key settings:
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `watcherUrl` | (required) | Watcher service URL (e.g. `http://localhost:1936`) |
-| `gatewayUrl` | `http://127.0.0.1:3000` | OpenClaw gateway URL for subprocess spawning |
+| `gatewayUrl` | `http://127.0.0.1:18789` | OpenClaw gateway URL for subprocess spawning |
 | `gatewayApiKey` | (optional) | API key for gateway authentication |
 | `metaProperty` | `{ _meta: "current" }` | Watcher metadata properties applied to live `.meta/meta.json` files. `Record<string, unknown>` — any shape accepted. |
 | `metaArchiveProperty` | `{ _meta: "archive" }` | Watcher metadata properties applied to `.meta/archive/**` snapshots. Same shape flexibility. |
@@ -92,13 +94,18 @@ Key settings:
 | `builderTimeout` | 600s | Builder subprocess timeout |
 | `criticTimeout` | 300s | Critic subprocess timeout |
 | `skipUnchanged` | true | Skip candidates with no changes since last synthesis |
-| `batchSize` | 1 | Number of metas to synthesize per invocation |
+| `thinking` | `low` | Thinking level for spawned LLM sessions |
+| `port` | 1938 | HTTP API listen port |
+| `schedule` | `*/30 * * * *` | Cron expression for automatic synthesis scheduling |
+| `reportChannel` | (optional) | Gateway channel target for progress messages (e.g. Slack channel ID) |
+| `logging.level` | `info` | Log level (trace/debug/info/warn/error) |
+| `logging.file` | (optional) | Log file path |
 
 ### Meta Discovery
 
 Discovery is entirely watcher-based. The engine:
 
-1. **Registers virtual inference rules** at plugin startup. These rules match
+1. **Registers virtual inference rules** at service startup. These rules match
    file paths (`**/.meta/meta.json` and `**/.meta/archive/*.json`) and apply
    the configured `metaProperty`/`metaArchiveProperty` values as watcher
    metadata on those indexed points.
@@ -113,8 +120,8 @@ Discovery is entirely watcher-based. The engine:
 
 **Important:** If you change `metaProperty` or `metaArchiveProperty` in config,
 you must:
-- Restart the OpenClaw gateway (so the plugin re-registers virtual rules with
-  the new property values)
+- Restart the jeeves-meta service (so it re-registers virtual rules with the
+  new property values)
 - Trigger a watcher rules reindex (`watcher_reindex` with scope `rules`) so
   existing indexed points get retagged with the new properties
 
@@ -160,11 +167,30 @@ referenced via `@file:` in the config:
 **Per-meta overrides:** Set `_architect` or `_critic` directly in a `meta.json`
 to override the defaults for that specific entity.
 
+### Minimal Config Example
+
+A minimum viable config file requires only `watcherUrl`, `defaultArchitect`,
+and `defaultCritic`:
+
+```json
+{
+  "watcherUrl": "http://localhost:1936",
+  "gatewayUrl": "http://127.0.0.1:18789",
+  "gatewayApiKey": "your-api-key",
+  "defaultArchitect": "@file:prompts/architect.md",
+  "defaultCritic": "@file:prompts/critic.md"
+}
+```
+
+All other fields use sensible defaults (port 1938, schedule every 30 min,
+depth weight 0.5, etc). Add `reportChannel`, `metaProperty`, `logging`,
+etc. as needed.
+
 ### Adding New Metas
 
 1. Create the `.meta/` directory under the domain path
-2. Seed it: `npx @karmaniverous/jeeves-meta seed <path>` — creates `meta.json`
-   with a UUID and default fields
+2. Seed it: `jeeves-meta seed <path>` — creates `meta.json`
+   with a UUID (`_id`). All other fields are populated on first synthesis
 3. Optionally edit `meta.json` to set `_steer`, `_depth`, and `_emphasis`
 4. Wait for the watcher to index the new `meta.json` (typically seconds via
    chokidar file watching)
@@ -179,47 +205,106 @@ to override the defaults for that specific entity.
 - **`architectEvery`:** Higher = fewer architect runs (cheaper but slower to
   adapt to structural changes).
 
+### Config Hot-Reload
+
+The following fields can be changed without restarting the service:
+- `schedule` — cron expression
+- `reportChannel` — progress reporting target
+- `logging.level` — log verbosity
+
+Edit the config file and save; the service detects changes via `fs.watchFile`.
+All other fields (including `metaProperty`, `port`, timeouts) require a service
+restart.
+
+### Progress Reporting
+
+When `reportChannel` is set, the service sends real-time progress messages
+to that channel via the OpenClaw gateway. Events include: synthesis started,
+phase started/completed (architect, builder, critic), synthesis completed,
+and errors. This uses
+`/tools/invoke` → `message` tool — zero LLM token cost.
+
+### TOOLS.md Bootstrapping Prompts
+
+The plugin's TOOLS.md injection automatically prompts bootstrapping:
+- **Service unreachable:** Shows "ACTION REQUIRED: jeeves-meta service is
+  unreachable" with troubleshooting steps and directs to this skill's
+  Bootstrapping section
+- **No entities found:** Shows "ACTION REQUIRED: No synthesis entities found"
+  and directs to this skill's Bootstrapping section
+
+These messages appear in the agent's system prompt, ensuring proactive
+discovery of configuration issues.
+
 ## Bootstrapping
 
 ### Prerequisites
 
 Before the synthesis engine can operate:
 
-1. **jeeves-watcher** must be running and indexing data
+1. **OpenClaw gateway** must be running (the service spawns LLM sessions
+   through it via `gatewayUrl`)
+   - Verify: `openclaw gateway status` or check the URL in config
+
+2. **jeeves-watcher** must be running and indexing data
    - Verify: `watcher_status` tool or `curl http://localhost:1936/status`
    - The watcher provides both semantic search and structured scan
 
-2. **Qdrant** must be running
+3. **Qdrant** must be running
    - Verify: `curl http://localhost:6333/healthz`
 
-3. **Config file** must exist at the path specified by `JEEVES_META_CONFIG`
+4. **Config file** must exist at the path specified by `JEEVES_META_CONFIG`
    - Must contain valid `watcherUrl`
    - Must contain `defaultArchitect` and `defaultCritic` (or `@file:` refs)
 
-4. **Prompt files** must exist if using `@file:` references
+5. **Prompt files** must exist if using `@file:` references
    - e.g. `J:\config\jeeves-meta\prompts\architect.md`
    - e.g. `J:\config\jeeves-meta\prompts\critic.md`
 
-5. **`.meta/` directories** must exist and be within paths the watcher indexes
-   - Seed new metas: `npx @karmaniverous/jeeves-meta seed <path>`
+6. **`.meta/` directories** must exist and be within paths the watcher indexes
+   - Seed new metas: `jeeves-meta seed <path>`
 
 ### Installation
 
-1. Install the OpenClaw plugin:
+1. Install and start the jeeves-meta service:
+
+```bash
+npm install -g @karmaniverous/jeeves-meta
+jeeves-meta start --config J:\config\jeeves-meta.config.json
+```
+
+2. Install the OpenClaw plugin:
 
 ```bash
 npx @karmaniverous/jeeves-meta-openclaw install
 ```
 
-2. Set the config path environment variable (in the gateway's environment):
+For non-default OpenClaw installations, set `OPENCLAW_CONFIG` (path to
+`openclaw.json`) or `OPENCLAW_HOME` (path to `.openclaw` directory).
 
+To uninstall: `npx @karmaniverous/jeeves-meta-openclaw uninstall`
+
+3. (Optional) Configure the plugin with the service URL — only needed if the
+   service runs on a non-default port or host:
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "jeeves-meta-openclaw": {
+        "enabled": true,
+        "config": {
+          "serviceUrl": "http://127.0.0.1:1938"
+        }
+      }
+    }
+  }
+}
 ```
-JEEVES_META_CONFIG=J:\config\jeeves-meta.config.json
-```
 
-3. Restart the OpenClaw gateway to load the plugin.
+4. Restart the OpenClaw gateway to load the plugin.
 
-4. Verify: check that `## Meta` appears in TOOLS.md injection and
+5. Verify: check that `## Meta` appears in TOOLS.md injection and
    `jeeves-meta` appears in available skills.
 
 ### First Synthesis
@@ -230,30 +315,94 @@ JEEVES_META_CONFIG=J:\config\jeeves-meta.config.json
 4. Review: `meta_detail <path>` with `includeArchive: 1` — check output quality
 5. Iterate on `_steer` prompts if needed
 
-## Library CLI
+### System Service Management
 
-The library ships a CLI for non-plugin operation:
+For production deployments, install as a system service:
 
 ```bash
-npx @karmaniverous/jeeves-meta <command> [options]
+jeeves-meta service install --config J:\config\jeeves-meta.config.json
 ```
 
-Commands: `status`, `list`, `detail`, `preview`, `synthesize`, `seed`,
-`unlock`, `validate`, `config show`, `config check`.
+This prints OS-specific instructions:
+- **Windows:** NSSM service commands
+- **macOS:** launchd plist
+- **Linux:** systemd unit
+
+Management commands (print OS-specific equivalents):
+```bash
+jeeves-meta service start     # print start instructions
+jeeves-meta service stop      # print stop instructions
+jeeves-meta service status    # query running service via HTTP API
+jeeves-meta service remove    # print removal instructions
+```
+
+### HTTP API
+
+The service exposes these endpoints (default port 1938):
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/status` | Service health, queue state, dependency checks |
+| GET | `/metas` | List metas with filtering and field projection |
+| GET | `/metas/:path` | Single meta detail with optional archive |
+| GET | `/preview` | Dry-run next synthesis candidate |
+| POST | `/synthesize` | Enqueue synthesis (stalest or specific path) |
+| POST | `/seed` | Create `.meta/` directory + meta.json |
+| POST | `/unlock` | Remove `.lock` file from a meta entity |
+| GET | `/config/validate` | Return sanitized active configuration |
+
+All endpoints return JSON. The OpenClaw plugin tools are thin wrappers
+around these endpoints.
+
+## Service CLI
+
+The service package ships a CLI:
+
+```bash
+jeeves-meta <command> [options]
+```
+
+Commands: `start`, `status`, `list`, `detail`, `preview`, `synthesize`,
+`seed`, `unlock`, `validate`, `service install|start|stop|status|remove`.
 
 Config resolution: `--config` flag → `JEEVES_META_CONFIG` env var → error.
-All commands support `--json` for machine-readable output.
+All client commands support `-p, --port` to specify the service port (default: 1938).
+The `start` command uses `--config`/`-c` instead (port is read from the config file).
+
+## Operational Monitoring
+
+Recommended periodic checks:
+- **Errors:** `meta_list` with `filter: { hasError: true }` — investigate
+  and retry with `meta_trigger`
+- **Stuck locks:** `meta_list` with `filter: { locked: true }` — locks
+  older than 30 minutes indicate a crashed synthesis; use `jeeves-meta unlock`
+- **Stale knowledge:** `meta_list` with `filter: { staleHours: 48 }` — check
+  if the scheduler is running and the watcher is up
+- **Service health:** `/status` endpoint (via `meta_list` summary or direct
+  HTTP) includes dependency status for watcher and gateway
+
+The TOOLS.md injection surfaces the most critical stats (entity count, errors,
+stalest entity) in the agent's system prompt automatically.
 
 ## Troubleshooting
 
+### Service unreachable
+
+**Symptom:** TOOLS.md shows "ACTION REQUIRED: jeeves-meta service is unreachable"
+**Cause:** Meta service not running or wrong `serviceUrl` in plugin config
+**Fix:**
+1. Check if the service is running: `jeeves-meta service status` or `curl http://localhost:1938/status`
+2. If down, start it: `jeeves-meta service start` or `jeeves-meta start --config <path>`
+3. If running on a different port, update `serviceUrl` in plugin config
+
 ### Watcher unreachable
 
-**Symptom:** TOOLS.md shows "ACTION REQUIRED: jeeves-watcher is unreachable"
-**Cause:** Watcher service not running or wrong URL in config
+**Symptom:** TOOLS.md shows a ⚠️ **Watcher** dependency warning in the entity summary
+**Cause:** Watcher service not running or wrong URL in meta service config
 **Fix:**
-1. Check watcher status: `watcher_status` tool
+1. Check watcher status: `watcher_status` tool or `curl http://localhost:1936/status`
 2. If down, start the watcher service
-3. If running on a different port, update `watcherUrl` in config
+3. If running on a different port, update `watcherUrl` in meta service config and restart the service
 
 ### No entities discovered
 
@@ -265,8 +414,8 @@ All commands support `--json` for machine-readable output.
    configured `watch` globs)
 3. Check that `metaProperty` in config matches the properties actually set
    on indexed points. If you changed `metaProperty`, run `watcher_reindex`
-   with scope `rules` and restart the gateway.
-4. Seed new metas if needed: `npx @karmaniverous/jeeves-meta seed <path>`
+   with scope `rules` and restart the meta service.
+4. Seed new metas if needed: `jeeves-meta seed <path>`
 
 ### Synthesis stuck (locked entities)
 
@@ -275,7 +424,7 @@ All commands support `--json` for machine-readable output.
 **Fix:**
 1. Check lock: `meta_detail <path>` — look for `locked: true`
 2. Locks auto-expire after 30 minutes
-3. For immediate unlock: `npx @karmaniverous/jeeves-meta unlock <path>`
+3. For immediate unlock: `jeeves-meta unlock <path>`
    or delete `.meta/.lock` file manually
 
 ### Executor timeouts
@@ -307,7 +456,7 @@ All commands support `--json` for machine-readable output.
 **Cause:** Virtual rules not re-registered after config change, or watcher
 not yet indexed new files
 **Fix:**
-1. If `metaProperty` changed: restart gateway + `watcher_reindex` (scope: rules)
+1. If `metaProperty` changed: restart meta service + `watcher_reindex` (scope: rules)
 2. If new `.meta/` directory: wait for chokidar detection (seconds) or
    trigger `watcher_reindex` (scope: full)
 3. Verify with `watcher_scan`: query for the expected properties to confirm
@@ -319,7 +468,13 @@ not yet indexed new files
   several minutes.
 - A locked meta (another synthesis in progress) will be skipped silently.
 - First-run quality is lower — the feedback loop needs 2-3 cycles to calibrate.
-- Changing `metaProperty` requires both a gateway restart AND a watcher reindex.
-  The gateway restart re-registers virtual rules; the reindex retags existing points.
+- Changing `metaProperty` requires both a meta service restart AND a watcher reindex.
+  The service restart re-registers virtual rules; the reindex retags existing points.
 - The `@file:` prefix in `defaultArchitect`/`defaultCritic` is resolved relative
   to the config file's directory, not the working directory.
+- The synthesis queue is single-threaded: one synthesis at a time. HTTP-triggered
+  syntheses get priority over scheduler-triggered ones.
+- The scheduler uses adaptive backoff: if no stale candidates are found, it
+  doubles the skip interval (max 4×). Backoff resets after a successful synthesis.
+- All CLI commands except `start` require the service to be running (they call
+  the HTTP API).

@@ -1,48 +1,26 @@
----
-title: TOOLS.md Injection
----
-
 # TOOLS.md Injection
 
-The plugin generates a dynamic Markdown section for the agent's TOOLS.md system prompt, providing at-a-glance synthesis engine status.
+The plugin periodically writes a `## Meta` section into the workspace `TOOLS.md` file. The OpenClaw gateway reads this file fresh on each new session, making synthesis stats available in the agent's system prompt.
 
-## How It Works
+## Content
 
-The `toolsWriter` module queries the watcher API at plugin startup and writes a Meta section into the TOOLS.md file on disk. The agent sees this content in every session.
+The injected section includes:
+- Entity summary table (total, stale, errors, never synthesized, stalest, last synthesized)
+- Dependency health warnings (watcher/gateway status)
+- Token usage table (cumulative architect/builder/critic)
+- Tool listing table
 
-## Three Output Modes
+## Refresh Cycle
 
-### 1. Watcher Unreachable
+- **Initial delay:** 5 seconds after gateway startup
+- **Refresh interval:** every 60 seconds
+- **Deduplication:** only writes when content changes
 
-When the watcher API is down or misconfigured:
+## Section Ordering
 
-```
-> **ACTION REQUIRED: jeeves-watcher is unreachable.**
-> ...
-```
+The writer maintains ordering: `## Watcher` → `## Server` → `## Meta`. If the section doesn't exist, it's inserted in the correct position.
 
-### 2. No Entities Found
+## Error Handling
 
-When the watcher is running but no `.meta/` directories are indexed:
+If the service is unreachable, the section displays troubleshooting guidance instead of entity stats.
 
-```
-> **ACTION REQUIRED: No synthesis entities found.**
-> ...
-```
-
-### 3. Healthy (normal mode)
-
-Entity summary table, token usage, and tool listing:
-
-- **Entity Summary** — total, stale, errors, never synthesized, stalest, last synthesized
-- **Token Usage** — cumulative architect/builder/critic tokens
-- **Tools** — quick reference table of all four synth tools
-- **Skill reference** — pointer to the jeeves-meta skill for detailed guidance
-
-## TOOLS.md Ordering
-
-The Meta section appears after the Watcher and Server sections:
-
-1. Watcher
-2. Server
-3. Meta

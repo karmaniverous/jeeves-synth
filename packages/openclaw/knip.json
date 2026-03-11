@@ -18,8 +18,5 @@
     "entry": [
       "src/**/*.test.ts"
     ]
-  },
-  "ignoreDependencies": [
-    "@karmaniverous/jeeves-meta"
-  ]
+  }
 }

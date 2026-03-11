@@ -1,44 +1,32 @@
----
-title: Virtual Inference Rules
----
+# Virtual Rules
 
-# Virtual Inference Rules
+The jeeves-meta **service** registers three virtual inference rules with jeeves-watcher at startup. The plugin does not register rules.
 
-The plugin registers three virtual inference rules with jeeves-watcher at startup. These rules tell the watcher how to index `.meta/` files in Qdrant.
+## meta-current
 
-## Rule 1: synth-meta-live
+Matches: `**/.meta/meta.json`
 
-Indexes live `.meta/meta.json` files with extracted fields:
+Indexes live synthesis files with configurable domain tags and extracted fields:
+- `meta_id`, `meta_steer`, `meta_depth`, `meta_emphasis`
+- `meta_synthesis_count`, `meta_structure_hash`
+- `meta_architect_tokens`, `meta_builder_tokens`, `meta_critic_tokens`
+- `generated_at_unix`, `has_error`, `meta_error_step`
 
-- `synth_id`, `synth_steer`, `synth_depth`, `synth_emphasis`
-- `synth_synthesis_count`, `synth_structure_hash`
-- `synth_architect_tokens`, `synth_builder_tokens`, `synth_critic_tokens`
-- `synth_error_step`, `has_error`, `generated_at_unix`
-- Domain: `synth-meta`
+Renders as Markdown with the `_content` synthesis body.
 
-The rule uses declarative `render` config to output `_content` as the document body for semantic search, with synthesis metadata as YAML frontmatter.
+## meta-archive
 
-## Rule 2: synth-meta-archive
+Matches: `**/.meta/archive/*.json`
 
-Indexes `.meta/archive/*.json` snapshots:
+Indexes archived snapshots with `archived` and `archived_at` flags. Renders the archived `_content`.
 
-- `synth_id`, `archived`, `archived_at`
-- Domain: `synth-archive`
+## meta-config
 
-Renders archived `_content` as the document body.
+Matches: `**/jeeves-meta.config.json`
 
-## Rule 3: synth-config
+Indexes the service configuration file with key config fields in frontmatter.
 
-Indexes `jeeves-meta.config.json`:
+## Re-registration
 
-- Domain: `synth-config`
-- Renders config fields as frontmatter, default prompts as body sections
+Rules are registered at startup with 10-retry exponential backoff. The scheduler also monitors watcher uptime — if the watcher restarts (uptime decreases), rules are automatically re-registered.
 
-## Render Config (not templates)
-
-All three rules use the declarative `render` configuration rather than Handlebars templates. The `render` config specifies:
-
-- **`frontmatter`**: Array of field names to include as YAML frontmatter
-- **`body`**: Array of `{ path, heading, label }` objects defining Markdown body sections
-
-This approach is pure data — no template authoring required, and it works with virtual rules (which bypass the watcher's template engine).

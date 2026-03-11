@@ -32,6 +32,7 @@ export interface ToolResult {
 }
 
 const PLUGIN_NAME = 'jeeves-meta-openclaw';
+const DEFAULT_SERVICE_URL = 'http://127.0.0.1:1938';
 
 /** Get plugin config. */
 function getPluginConfig(api: PluginApi): Record<string, unknown> | undefined {
@@ -39,23 +40,21 @@ function getPluginConfig(api: PluginApi): Record<string, unknown> | undefined {
 }
 
 /**
- * Resolve the config file path.
+ * Resolve the service URL.
  *
  * Resolution order:
- * 1. Plugin config `configPath` setting
- * 2. `JEEVES_META_CONFIG` environment variable
- * 3. Error — no default path
+ * 1. Plugin config `serviceUrl` setting
+ * 2. `JEEVES_META_URL` environment variable
+ * 3. Default: http://127.0.0.1:1938
  */
-export function getConfigPath(api: PluginApi): string {
-  const fromPlugin = getPluginConfig(api)?.configPath;
+export function getServiceUrl(api: PluginApi): string {
+  const fromPlugin = getPluginConfig(api)?.serviceUrl;
   if (typeof fromPlugin === 'string') return fromPlugin;
 
-  const fromEnv = process.env['JEEVES_META_CONFIG'];
+  const fromEnv = process.env['JEEVES_META_URL'];
   if (fromEnv) return fromEnv;
 
-  throw new Error(
-    'jeeves-meta config path not found. Set configPath in plugin config or JEEVES_META_CONFIG env var.',
-  );
+  return DEFAULT_SERVICE_URL;
 }
 
 /** Format a successful tool result. */

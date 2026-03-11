@@ -9,9 +9,9 @@
   "configSchema": {
     "type": "object",
     "properties": {
-      "configPath": {
+      "serviceUrl": {
         "type": "string",
-        "description": "Path to jeeves-meta.config.json. Falls back to JEEVES_META_CONFIG env var."
+        "description": "URL of the jeeves-meta HTTP service. Defaults to http://127.0.0.1:1938. Falls back to JEEVES_META_URL env var."
       }
     }
   }

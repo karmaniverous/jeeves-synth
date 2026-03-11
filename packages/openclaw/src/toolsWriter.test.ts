@@ -53,6 +53,19 @@ describe('upsertMetaSection', () => {
     expect(result).toContain('some other content');
   });
 
+  it('removes duplicate ## Meta sections', () => {
+    const existing =
+      '# Jeeves Platform Tools\n\n## Meta\n\nfirst meta\n\n## Server\n\nserver\n\n## Meta\n\nsecond meta\n\n## Meta\n\nthird meta';
+    const result = upsertMetaSection(existing, SAMPLE_MENU);
+    const metaCount = (result.match(/^## Meta$/gm) || []).length;
+    expect(metaCount).toBe(1);
+    expect(result).toContain('42 meta entities');
+    expect(result).not.toContain('first meta');
+    expect(result).not.toContain('second meta');
+    expect(result).not.toContain('third meta');
+    expect(result).toContain('server');
+  });
+
   it('preserves content before and after replaced section', () => {
     const existing =
       '# Jeeves Platform Tools\n\n## Watcher\n\nwatcher stuff\n\n## Meta\n\nold\n\n# TOOLS.md - Local Notes\n\nmy notes';

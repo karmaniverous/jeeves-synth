@@ -10,10 +10,9 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { type MetaConfig } from '@karmaniverous/jeeves-meta';
-
 import type { PluginApi } from './helpers.js';
 import { generateMetaMenu } from './promptInjection.js';
+import type { MetaServiceClient } from './serviceClient.js';
 
 const REFRESH_INTERVAL_MS = 60_000;
 const INITIAL_DELAY_MS = 5_000;
@@ -46,9 +45,12 @@ export function upsertMetaSection(existing: string, metaMenu: string): string {
   const section = '## Meta\n\n' + metaMenu;
 
   // Replace existing Meta section (match from ## Meta to next ## or # or EOF)
-  const re = /^## Meta\n[\s\S]*?(?=\n## |\n# |$(?![\s\S]))/m;
-  if (re.test(existing)) {
-    return existing.replace(re, section);
+  // Remove ALL existing ## Meta sections (handles duplicates from prior bugs)
+  const re = /^## Meta\n[\s\S]*?(?=\n## |\n# |$(?![\s\S]))/gm;
+  const cleaned = existing.replace(re, '').replace(/\n{3,}/g, '\n\n');
+  if (cleaned !== existing) {
+    // Had at least one section — re-insert at correct position
+    return upsertMetaSection(cleaned.trim() + '\n', metaMenu);
   }
 
   // No existing section. Insert in correct order.
@@ -94,14 +96,14 @@ export function upsertMetaSection(existing: string, metaMenu: string): string {
  * Fetch the current meta menu and write it to TOOLS.md if changed.
  *
  * @param api - Plugin API.
- * @param watcherUrl - Watcher API base URL.
+ * @param client - MetaServiceClient instance.
  * @returns True if the file was updated.
  */
 async function refreshToolsMd(
   api: PluginApi,
-  config: MetaConfig,
+  client: MetaServiceClient,
 ): Promise<boolean> {
-  const menu = await generateMetaMenu(config);
+  const menu = await generateMetaMenu(client);
 
   if (menu === lastWrittenMenu) {
     return false;
@@ -133,12 +135,15 @@ async function refreshToolsMd(
  * Defers first write by 5s, then refreshes every 60s.
  *
  * @param api - Plugin API.
- * @param watcherUrl - Watcher API base URL.
+ * @param client - MetaServiceClient instance.
  */
-export function startToolsWriter(api: PluginApi, config: MetaConfig): void {
+export function startToolsWriter(
+  api: PluginApi,
+  client: MetaServiceClient,
+): void {
   // Deferred initial write
   setTimeout(() => {
-    refreshToolsMd(api, config).catch((err: unknown) => {
+    refreshToolsMd(api, client).catch((err: unknown) => {
       console.error('[jeeves-meta] Failed to write TOOLS.md:', err);
     });
   }, INITIAL_DELAY_MS);
@@ -148,7 +153,7 @@ export function startToolsWriter(api: PluginApi, config: MetaConfig): void {
     clearInterval(intervalHandle);
   }
   intervalHandle = setInterval(() => {
-    refreshToolsMd(api, config).catch((err: unknown) => {
+    refreshToolsMd(api, client).catch((err: unknown) => {
       console.error('[jeeves-meta] Failed to refresh TOOLS.md:', err);
     });
   }, REFRESH_INTERVAL_MS);
