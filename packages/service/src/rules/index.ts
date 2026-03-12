@@ -76,6 +76,10 @@ function buildMetaRules(config: MetaConfig) {
               type: 'string',
               set: '{{json._error.step}}',
             },
+            generated_at: {
+              type: 'string',
+              set: '{{json._generatedAt}}',
+            },
             generated_at_unix: {
               type: 'integer',
               set: '{{toUnix json._generatedAt}}',
@@ -91,7 +95,7 @@ function buildMetaRules(config: MetaConfig) {
         frontmatter: [
           'meta_id',
           'meta_steer',
-          'generated_at_unix',
+          'generated_at',
           'meta_depth',
           'meta_emphasis',
           'meta_architect_tokens',
