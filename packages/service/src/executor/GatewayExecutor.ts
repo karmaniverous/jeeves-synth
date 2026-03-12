@@ -155,7 +155,7 @@ export class GatewayExecutor implements MetaExecutor {
     const taskWithOutput =
       task +
       '\n\n## OUTPUT DELIVERY\n\n' +
-      'Write your complete JSON output to a file using the Write tool at:\n' +
+      'Write your complete output to a file using the Write tool at:\n' +
       outputPath +
       '\n\n' +
       'Reply with ONLY the file path you wrote to. No other text.';
