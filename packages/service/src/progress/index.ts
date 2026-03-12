@@ -15,7 +15,8 @@ export type ProgressEvent = {
     | 'phase_complete'
     | 'synthesis_complete'
     | 'error';
-  metaPath: string;
+  /** Owner path (not .meta path) of the entity being synthesized. */
+  path: string;
   phase?: ProgressPhase;
   tokens?: number;
   durationMs?: number;
@@ -29,6 +30,10 @@ export type ProgressReporterConfig = {
   reportChannel?: string;
 };
 
+function formatNumber(n: number): string {
+  return n.toLocaleString('en-US');
+}
+
 function formatSeconds(durationMs: number): string {
   const seconds = durationMs / 1000;
   return seconds.toFixed(1) + 's';
@@ -41,13 +46,14 @@ function titleCasePhase(phase: ProgressPhase): string {
 export function formatProgressEvent(event: ProgressEvent): string {
   switch (event.type) {
     case 'synthesis_start':
-      return `🔬 Started meta synthesis: ${event.metaPath}`;
+      return `🔬 Started meta synthesis: ${event.path}`;
 
     case 'phase_start': {
+      const path = event.path;
       if (!event.phase) {
-        return `  ⚙️ Phase started: ${event.metaPath}`;
+        return `  ⚙️ Phase started: ${path}`;
       }
-      return `  ⚙️ ${titleCasePhase(event.phase)} phase started`;
+      return `  ⚙️ ${titleCasePhase(event.phase)} phase started — ${path}`;
     }
 
     case 'phase_complete': {
@@ -57,7 +63,8 @@ export function formatProgressEvent(event: ProgressEvent): string {
         event.durationMs !== undefined
           ? formatSeconds(event.durationMs)
           : '0.0s';
-      return `  ✅ ${phase} phase complete (${String(tokens)} tokens / ${duration})`;
+      const path = event.path;
+      return `  ✅ ${phase} complete — ${path} (${formatNumber(tokens)} tokens / ${duration})`;
     }
 
     case 'synthesis_complete': {
@@ -66,13 +73,13 @@ export function formatProgressEvent(event: ProgressEvent): string {
         event.durationMs !== undefined
           ? formatSeconds(event.durationMs)
           : '0.0s';
-      return `✅ Completed: ${event.metaPath} (${String(tokens)} tokens / ${duration})`;
+      return `✅ Completed: ${event.path} (${formatNumber(tokens)} tokens / ${duration})`;
     }
 
     case 'error': {
       const phase = event.phase ? `${titleCasePhase(event.phase)} ` : '';
       const error = event.error ?? 'Unknown error';
-      return `❌ Synthesis failed at ${phase}phase: ${event.metaPath}\n   Error: ${error}`;
+      return `❌ Synthesis failed at ${phase}phase: ${event.path}\n   Error: ${error}`;
     }
 
     default: {

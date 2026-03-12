@@ -238,7 +238,7 @@ async function synthesizeNode(
     try {
       await onProgress?.({
         type: 'phase_start',
-        metaPath: node.metaPath,
+        path: node.ownerPath,
         phase: 'architect',
       });
       const phaseStart = Date.now();
@@ -252,7 +252,7 @@ async function synthesizeNode(
       synthesisCount = 0;
       await onProgress?.({
         type: 'phase_complete',
-        metaPath: node.metaPath,
+        path: node.ownerPath,
         phase: 'architect',
         tokens: architectTokens,
         durationMs: Date.now() - phaseStart,
@@ -292,7 +292,7 @@ async function synthesizeNode(
   try {
     await onProgress?.({
       type: 'phase_start',
-      metaPath: node.metaPath,
+      path: node.ownerPath,
       phase: 'builder',
     });
     const builderStart = Date.now();
@@ -306,7 +306,7 @@ async function synthesizeNode(
     synthesisCount++;
     await onProgress?.({
       type: 'phase_complete',
-      metaPath: node.metaPath,
+      path: node.ownerPath,
       phase: 'builder',
       tokens: builderTokens,
       durationMs: Date.now() - builderStart,
@@ -325,7 +325,7 @@ async function synthesizeNode(
   try {
     await onProgress?.({
       type: 'phase_start',
-      metaPath: node.metaPath,
+      path: node.ownerPath,
       phase: 'critic',
     });
     const criticStart = Date.now();
@@ -339,7 +339,7 @@ async function synthesizeNode(
     stepError = null; // Clear any architect error on full success
     await onProgress?.({
       type: 'phase_complete',
-      metaPath: node.metaPath,
+      path: node.ownerPath,
       phase: 'critic',
       tokens: criticTokens,
       durationMs: Date.now() - criticStart,

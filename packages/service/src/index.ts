@@ -249,7 +249,7 @@ export async function startService(
     let cycleTokens = 0;
     await progress.report({
       type: 'synthesis_start',
-      metaPath: path,
+      path: path,
     });
 
     try {
@@ -280,14 +280,14 @@ export async function startService(
         stats.totalErrors++;
         await progress.report({
           type: 'error',
-          metaPath: path,
+          path: path,
           error: result.error.message,
         });
       } else {
         scheduler.resetBackoff();
         await progress.report({
           type: 'synthesis_complete',
-          metaPath: path,
+          path: path,
           tokens: cycleTokens,
           durationMs,
         });
@@ -297,7 +297,7 @@ export async function startService(
       const message = err instanceof Error ? err.message : String(err);
       await progress.report({
         type: 'error',
-        metaPath: path,
+        path: path,
         error: message,
       });
       throw err;

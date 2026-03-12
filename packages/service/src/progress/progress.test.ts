@@ -15,36 +15,38 @@ function createLogger() {
 
 describe('formatProgressEvent', () => {
   it('formats synthesis_start', () => {
-    const e: ProgressEvent = { type: 'synthesis_start', metaPath: 'x' };
+    const e: ProgressEvent = { type: 'synthesis_start', path: 'x' };
     expect(formatProgressEvent(e)).toBe('🔬 Started meta synthesis: x');
   });
 
   it('formats phase_start', () => {
     const e: ProgressEvent = {
       type: 'phase_start',
-      metaPath: 'x',
+      path: 'j:/domains/github/org',
       phase: 'architect',
     };
-    expect(formatProgressEvent(e)).toBe('  ⚙️ Architect phase started');
+    expect(formatProgressEvent(e)).toBe(
+      '  ⚙️ Architect phase started — j:/domains/github/org',
+    );
   });
 
   it('formats phase_complete', () => {
     const e: ProgressEvent = {
       type: 'phase_complete',
-      metaPath: 'x',
+      path: 'j:/domains/github/org',
       phase: 'builder',
       tokens: 123,
       durationMs: 1500,
     };
     expect(formatProgressEvent(e)).toBe(
-      '  ✅ Builder phase complete (123 tokens / 1.5s)',
+      '  ✅ Builder complete — j:/domains/github/org (123 tokens / 1.5s)',
     );
   });
 
   it('formats synthesis_complete', () => {
     const e: ProgressEvent = {
       type: 'synthesis_complete',
-      metaPath: 'x',
+      path: 'x',
       tokens: 10,
       durationMs: 2500,
     };
@@ -54,7 +56,7 @@ describe('formatProgressEvent', () => {
   it('formats error', () => {
     const e: ProgressEvent = {
       type: 'error',
-      metaPath: 'x',
+      path: 'x',
       phase: 'critic',
       error: 'boom',
     };
@@ -78,7 +80,7 @@ describe('ProgressReporter', () => {
         Promise.resolve(new Response('', { status: 200 })),
       );
 
-    await reporter.report({ type: 'synthesis_start', metaPath: 'x' });
+    await reporter.report({ type: 'synthesis_start', path: 'x' });
 
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
@@ -115,7 +117,7 @@ describe('ProgressReporter', () => {
         return Promise.resolve(new Response('', { status: 200 }));
       });
 
-    await reporter.report({ type: 'synthesis_start', metaPath: 'x' });
+    await reporter.report({ type: 'synthesis_start', path: 'x' });
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     fetchSpy.mockRestore();
@@ -135,7 +137,7 @@ describe('ProgressReporter', () => {
       );
 
     await expect(
-      reporter.report({ type: 'synthesis_start', metaPath: 'x' }),
+      reporter.report({ type: 'synthesis_start', path: 'x' }),
     ).resolves.toBeUndefined();
 
     expect(logger.warn).toHaveBeenCalled();
