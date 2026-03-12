@@ -92,7 +92,7 @@ function buildMetaRules(config: MetaConfig) {
         },
       ],
       render: {
-        frontmatter: ['meta_id', 'generated_at', '*', '!_*', '!has_error'],
+        frontmatter: ['meta_id', 'generated_at', '*', '!_*', '!json', '!file', '!has_error'],
         body: [{ path: 'json._content', heading: 1, label: 'Synthesis' }],
       },
       renderAs: 'md',
