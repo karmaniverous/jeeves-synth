@@ -21,11 +21,14 @@ export const SERVICE_NAME = 'jeeves-meta';
 export const SERVICE_VERSION: string = (() => {
   try {
     const dir = dirname(fileURLToPath(import.meta.url));
-    // Walk up to find package.json (works from src/ or dist/)
-    for (const candidate of [
-      resolve(dir, '..', 'package.json'),
-      resolve(dir, '..', '..', 'package.json'),
-    ]) {
+    // Walk up to find package.json (works from src/, dist/, or dist/cli/jeeves-meta/)
+    let current = dir;
+    const candidates: string[] = [];
+    for (let i = 0; i < 5; i++) {
+      candidates.push(resolve(current, 'package.json'));
+      current = resolve(current, '..');
+    }
+    for (const candidate of candidates) {
       try {
         const pkg = JSON.parse(readFileSync(candidate, 'utf8')) as {
           version?: string;
