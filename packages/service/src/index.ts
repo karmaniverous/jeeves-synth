@@ -247,9 +247,11 @@ export async function startService(
   const synthesizeFn = async (path: string): Promise<void> => {
     const startMs = Date.now();
     let cycleTokens = 0;
+    // Strip .meta suffix for human-readable progress reporting
+    const ownerPath = path.replace(/\/?\.meta\/?$/, '');
     await progress.report({
       type: 'synthesis_start',
-      path: path,
+      path: ownerPath,
     });
 
     try {
@@ -280,14 +282,14 @@ export async function startService(
         stats.totalErrors++;
         await progress.report({
           type: 'error',
-          path: path,
+          path: ownerPath,
           error: result.error.message,
         });
       } else {
         scheduler.resetBackoff();
         await progress.report({
           type: 'synthesis_complete',
-          path: path,
+          path: ownerPath,
           tokens: cycleTokens,
           durationMs,
         });
@@ -297,7 +299,7 @@ export async function startService(
       const message = err instanceof Error ? err.message : String(err);
       await progress.report({
         type: 'error',
-        path: path,
+        path: ownerPath,
         error: message,
       });
       throw err;
