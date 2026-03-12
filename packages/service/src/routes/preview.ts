@@ -37,7 +37,7 @@ export function registerPreviewRoute(
 
     let result;
     try {
-      result = await listMetas(config, watcher);
+      result = await listMetas(config, watcher, request.log);
     } catch {
       return reply.status(503).send({
         error: 'SERVICE_UNAVAILABLE',

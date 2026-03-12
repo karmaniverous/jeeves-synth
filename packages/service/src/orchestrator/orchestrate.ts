@@ -28,6 +28,7 @@ import type { MetaNode } from '../discovery/types.js';
 import { toMetaError } from '../errors.js';
 import type { MetaExecutor, WatcherClient } from '../interfaces/index.js';
 import { acquireLock, releaseLock } from '../lock.js';
+import type { MinimalLogger } from '../logger/index.js';
 import { normalizePath } from '../normalizePath.js';
 import type { ProgressEvent } from '../progress/index.js';
 import {
@@ -379,6 +380,7 @@ async function orchestrateOnce(
   watcher: WatcherClient,
   targetPath?: string,
   onProgress?: ProgressCallback,
+  logger?: MinimalLogger,
 ): Promise<OrchestrateResult> {
   // When targetPath is provided, skip the expensive full discovery scan.
   // Build a minimal node from the filesystem instead.
@@ -410,7 +412,12 @@ async function orchestrateOnce(
 
   // Full discovery path (scheduler-driven, no specific target)
   // Step 1: Discover via watcher scan
-  const metaPaths = await discoverMetas(config, watcher);
+  const discoveryStart = Date.now();
+  const metaPaths = await discoverMetas(config, watcher, logger);
+  logger?.debug(
+    { paths: metaPaths.length, durationMs: Date.now() - discoveryStart },
+    'discovery complete',
+  );
   if (metaPaths.length === 0) return { synthesized: false };
 
   // Read meta.json for each discovered meta
@@ -520,6 +527,7 @@ export async function orchestrate(
   watcher: WatcherClient,
   targetPath?: string,
   onProgress?: ProgressCallback,
+  logger?: MinimalLogger,
 ): Promise<OrchestrateResult[]> {
   const result = await orchestrateOnce(
     config,
@@ -527,6 +535,7 @@ export async function orchestrate(
     watcher,
     targetPath,
     onProgress,
+    logger,
   );
   return [result];
 }

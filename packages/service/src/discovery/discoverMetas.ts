@@ -8,6 +8,7 @@
  */
 
 import type { WatcherClient } from '../interfaces/index.js';
+import type { MinimalLogger } from '../logger/index.js';
 import { normalizePath } from '../normalizePath.js';
 import { paginatedScan } from '../paginatedScan.js';
 import type { MetaConfig } from '../schema/index.js';
@@ -78,13 +79,15 @@ export function buildMetaFilter(config: MetaConfig): Record<string, unknown> {
 export async function discoverMetas(
   config: MetaConfig,
   watcher: WatcherClient,
+  logger?: MinimalLogger,
 ): Promise<string[]> {
   const filter = buildMetaFilter(config);
 
-  const scanFiles = await paginatedScan(watcher, {
-    filter,
-    fields: ['file_path'],
-  });
+  const scanFiles = await paginatedScan(
+    watcher,
+    { filter, fields: ['file_path'] },
+    logger,
+  );
 
   // Deduplicate by .meta/ directory path (handles multi-chunk files)
   const seen = new Set<string>();

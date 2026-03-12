@@ -69,7 +69,7 @@ export type {
 
 // ── Logger ──
 export type { LoggerConfig } from './logger/index.js';
-export { createLogger } from './logger/index.js';
+export { createLogger, type MinimalLogger } from './logger/index.js';
 
 // ── Orchestrator ──
 export {
