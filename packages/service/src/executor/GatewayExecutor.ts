@@ -106,6 +106,27 @@ export class GatewayExecutor implements MetaExecutor {
     return data;
   }
 
+  /** Look up totalTokens for a session via sessions_list. */
+  private async getSessionTokens(
+    sessionKey: string,
+  ): Promise<number | undefined> {
+    try {
+      const result = await this.invoke('sessions_list', {
+        limit: 20,
+        messageLimit: 0,
+      });
+
+      const sessions = (result.result?.details?.sessions ??
+        result.result?.sessions ??
+        []) as Array<{ key: string; totalTokens?: number }>;
+
+      const match = sessions.find((s) => s.key === sessionKey);
+      return match?.totalTokens ?? undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   async spawn(
     task: string,
     options?: MetaSpawnOptions,
@@ -167,13 +188,8 @@ export class GatewayExecutor implements MetaExecutor {
             lastMsg.stopReason !== 'toolUse' &&
             lastMsg.stopReason !== 'error'
           ) {
-            // Sum token usage from all messages
-            let tokens: number | undefined;
-            let sum = 0;
-            for (const msg of msgArray) {
-              if (msg.usage?.totalTokens) sum += msg.usage.totalTokens;
-            }
-            if (sum > 0) tokens = sum;
+            // Fetch token usage from session metadata
+            const tokens = await this.getSessionTokens(sessionKey);
 
             // Find the last assistant message with content
             for (let i = msgArray.length - 1; i >= 0; i--) {
