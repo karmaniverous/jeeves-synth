@@ -17,13 +17,47 @@ export interface BuilderOutput {
 }
 
 /**
- * Parse architect output. The architect returns a task brief as text.
+ * Parse architect output. The architect should return a plain Markdown task brief.
+ *
+ * If the architect wraps its output in JSON (despite prompt instructions),
+ * extract the text values and concatenate them as markdown.
  *
  * @param output - Raw subprocess output.
- * @returns The task brief string.
+ * @returns The task brief string as plain Markdown.
  */
 export function parseArchitectOutput(output: string): string {
-  return output.trim();
+  const trimmed = output.trim();
+
+  // If it looks like JSON, try to unwrap it
+  if (trimmed.startsWith('{')) {
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      if (typeof parsed === 'object' && parsed !== null) {
+        return extractTextFromJson(parsed as Record<string, unknown>);
+      }
+    } catch {
+      // Not valid JSON — treat as text
+    }
+  }
+
+  return trimmed;
+}
+
+/** Recursively extract string values from a JSON object into markdown. */
+function extractTextFromJson(obj: Record<string, unknown>): string {
+  const parts: string[] = [];
+  for (const [, value] of Object.entries(obj)) {
+    if (typeof value === 'string') {
+      parts.push(value);
+    } else if (
+      typeof value === 'object' &&
+      value !== null &&
+      !Array.isArray(value)
+    ) {
+      parts.push(extractTextFromJson(value as Record<string, unknown>));
+    }
+  }
+  return parts.join('\n\n');
 }
 
 /**

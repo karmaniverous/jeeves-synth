@@ -202,9 +202,6 @@ async function synthesizeNode(
   watcher: WatcherClient,
   onProgress?: ProgressCallback,
 ): Promise<OrchestrateResult> {
-  const architectPrompt = currentMeta._architect ?? config.defaultArchitect;
-  const criticPrompt = currentMeta._critic ?? config.defaultCritic;
-
   // Step 5-6: Steer change detection
   const latestArchive = readLatestArchive(node.metaPath);
   const steerChanged = hasSteerChanged(
