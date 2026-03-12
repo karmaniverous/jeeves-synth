@@ -8,6 +8,9 @@
  * @module executor/GatewayExecutor
  */
 
+import { randomUUID } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, unlinkSync } from 'node:fs';
+
 import type {
   MetaExecutor,
   MetaSpawnOptions,
@@ -26,6 +29,8 @@ export interface GatewayExecutorOptions {
   apiKey?: string;
   /** Polling interval in ms. Default: 5000. */
   pollIntervalMs?: number;
+  /** Workspace directory for output staging. Default: J:\\jeeves\\jeeves-meta */
+  workspaceDir?: string;
 }
 
 /** Response shape from /tools/invoke. */
@@ -61,6 +66,7 @@ export class GatewayExecutor implements MetaExecutor {
   private readonly gatewayUrl: string;
   private readonly apiKey: string | undefined;
   private readonly pollIntervalMs: number;
+  private readonly workspaceDir: string;
 
   constructor(options: GatewayExecutorOptions = {}) {
     this.gatewayUrl = (options.gatewayUrl ?? 'http://127.0.0.1:18789').replace(
@@ -69,6 +75,7 @@ export class GatewayExecutor implements MetaExecutor {
     );
     this.apiKey = options.apiKey;
     this.pollIntervalMs = options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
+    this.workspaceDir = options.workspaceDir ?? 'J:\\jeeves\\jeeves-meta';
   }
 
   /** Invoke a gateway tool via the /tools/invoke HTTP endpoint. */
@@ -135,9 +142,27 @@ export class GatewayExecutor implements MetaExecutor {
     const timeoutMs = timeoutSeconds * 1000;
     const deadline = Date.now() + timeoutMs;
 
+    // Ensure workspace dir exists
+    if (!existsSync(this.workspaceDir)) {
+      mkdirSync(this.workspaceDir, { recursive: true });
+    }
+
+    // Generate unique output path for file-based output
+    const outputId = randomUUID();
+    const outputPath = this.workspaceDir + '/output-' + outputId + '.json';
+
+    // Append file output instruction to the task
+    const taskWithOutput =
+      task +
+      '\n\n## OUTPUT DELIVERY\n\n' +
+      'Write your complete JSON output to a file using the Write tool at:\n' +
+      outputPath +
+      '\n\n' +
+      'Reply with ONLY the file path you wrote to. No other text.';
+
     // Step 1: Spawn the sub-agent session
     const spawnResult = await this.invoke('sessions_spawn', {
-      task,
+      task: taskWithOutput,
       label: options?.label ?? 'jeeves-meta-synthesis',
       runTimeoutSeconds: timeoutSeconds,
       ...(options?.thinking ? { thinking: options.thinking } : {}),
@@ -191,11 +216,24 @@ export class GatewayExecutor implements MetaExecutor {
             // Fetch token usage from session metadata
             const tokens = await this.getSessionTokens(sessionKey);
 
-            // Find the last assistant message with content
+            // Read output from file (sub-agent wrote it via Write tool)
+            if (existsSync(outputPath)) {
+              try {
+                const output = readFileSync(outputPath, 'utf8');
+                return { output, tokens };
+              } finally {
+                try {
+                  unlinkSync(outputPath);
+                } catch {
+                  /* cleanup best-effort */
+                }
+              }
+            }
+
+            // Fallback: extract from message content if file wasn't written
             for (let i = msgArray.length - 1; i >= 0; i--) {
               const msg = msgArray[i];
               if (msg.role === 'assistant' && msg.content) {
-                // Content may be a string or array of content blocks
                 const text =
                   typeof msg.content === 'string'
                     ? msg.content

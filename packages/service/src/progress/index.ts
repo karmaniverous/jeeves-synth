@@ -36,7 +36,7 @@ function formatNumber(n: number): string {
 
 function formatSeconds(durationMs: number): string {
   const seconds = durationMs / 1000;
-  return seconds.toFixed(1) + 's';
+  return Math.round(seconds).toString() + 's';
 }
 
 function titleCasePhase(phase: ProgressPhase): string {
@@ -49,22 +49,18 @@ export function formatProgressEvent(event: ProgressEvent): string {
       return `🔬 Started meta synthesis: ${event.path}`;
 
     case 'phase_start': {
-      const path = event.path;
       if (!event.phase) {
-        return `  ⚙️ Phase started: ${path}`;
+        return '  ⚙️ Phase started';
       }
-      return `  ⚙️ ${titleCasePhase(event.phase)} phase started — ${path}`;
+      return `  ⚙️ ${titleCasePhase(event.phase)} phase started`;
     }
 
     case 'phase_complete': {
       const phase = event.phase ? titleCasePhase(event.phase) : 'Phase';
       const tokens = event.tokens ?? 0;
       const duration =
-        event.durationMs !== undefined
-          ? formatSeconds(event.durationMs)
-          : '0.0s';
-      const path = event.path;
-      return `  ✅ ${phase} complete — ${path} (${formatNumber(tokens)} tokens / ${duration})`;
+        event.durationMs !== undefined ? formatSeconds(event.durationMs) : '0s';
+      return `  ✅ ${phase} complete (${formatNumber(tokens)} tokens / ${duration})`;
     }
 
     case 'synthesis_complete': {

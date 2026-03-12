@@ -25,9 +25,7 @@ describe('formatProgressEvent', () => {
       path: 'j:/domains/github/org',
       phase: 'architect',
     };
-    expect(formatProgressEvent(e)).toBe(
-      '  ⚙️ Architect phase started — j:/domains/github/org',
-    );
+    expect(formatProgressEvent(e)).toBe('  ⚙️ Architect phase started');
   });
 
   it('formats phase_complete', () => {
@@ -35,11 +33,11 @@ describe('formatProgressEvent', () => {
       type: 'phase_complete',
       path: 'j:/domains/github/org',
       phase: 'builder',
-      tokens: 123,
+      tokens: 1234,
       durationMs: 1500,
     };
     expect(formatProgressEvent(e)).toBe(
-      '  ✅ Builder complete — j:/domains/github/org (123 tokens / 1.5s)',
+      '  ✅ Builder complete (1,234 tokens / 2s)',
     );
   });
 
@@ -50,7 +48,7 @@ describe('formatProgressEvent', () => {
       tokens: 10,
       durationMs: 2500,
     };
-    expect(formatProgressEvent(e)).toBe('✅ Completed: x (10 tokens / 2.5s)');
+    expect(formatProgressEvent(e)).toBe('✅ Completed: x (10 tokens / 3s)');
   });
 
   it('formats error', () => {
